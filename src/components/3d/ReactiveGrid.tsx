@@ -1,5 +1,5 @@
 import { useRef, forwardRef, useImperativeHandle } from 'react';
-import { useFrame, extend, type ThreeElement } from '@react-three/fiber';
+import { useFrame, extend, type Object3DNode } from '@react-three/fiber';
 import * as THREE from 'three';
 import { shaderMaterial } from '@react-three/drei';
 import { GRID_SIZE } from '../../utils/gameUtils';
@@ -68,10 +68,16 @@ const GridMaterial = shaderMaterial(
 
 extend({ GridMaterial });
 
-// Add to ThreeElements for TS support
+// Valid Type Declaration for R3F v9
 declare module '@react-three/fiber' {
     interface ThreeElements {
-        gridMaterial: ThreeElement<typeof GridMaterial>
+        gridMaterial: Object3DNode<THREE.ShaderMaterial, typeof GridMaterial> & {
+            uTime?: number;
+            uImpulse?: THREE.Vector2;
+            uStrength?: number;
+            uColor?: THREE.Color;
+            uGridSize?: number;
+        }
     }
 }
 
