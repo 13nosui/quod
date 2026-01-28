@@ -53,11 +53,11 @@ export const Block3D = ({ x, y, color, isGhost = false }: Block3DProps) => {
             <boxGeometry args={[size, size, size]} />
             <meshPhysicalMaterial
                 color={color}
-                transparent={true}
-                opacity={isGhost ? 0.3 : 0.85}
+                transparent={isGhost}
+                opacity={isGhost ? 0.3 : 1.0}
                 roughness={isGhost ? 0.5 : 0.1}
                 metalness={0.0}
-                transmission={isGhost ? 0.5 : 1.0}
+                transmission={isGhost ? 0.5 : 0.0}
                 ior={1.4}
                 thickness={isGhost ? 0.5 : 1.5}
                 attenuationColor={color}
