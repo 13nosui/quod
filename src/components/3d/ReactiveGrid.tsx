@@ -1,4 +1,4 @@
-import { extend, type ThreeElement } from '@react-three/fiber';
+import { extend } from '@react-three/fiber';
 import * as THREE from 'three';
 import { shaderMaterial } from '@react-three/drei';
 import { GRID_SIZE } from '../../utils/gameUtils';
