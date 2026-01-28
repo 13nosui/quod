@@ -51,8 +51,8 @@ export const Block3D = ({ x, y, type, color, onClick }: Block3DProps) => {
                     flatShading={true}
                     roughness={0.8}
                     metalness={0}
-                    transparent
-                    opacity={0.9}
+                    transparent={false}
+                    opacity={1}
                 />
             </mesh>
         </motion.group>

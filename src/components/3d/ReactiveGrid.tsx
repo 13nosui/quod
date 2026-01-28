@@ -29,7 +29,7 @@ const fragmentShader = `
   void main() {
     vec2 grid = fract(vUv * uGridSize);
     float line = step(0.98, grid.x) + step(0.98, grid.y);
-    vec3 color = mix(vec3(0.0), vec3(1.0), line * 0.3);
+    vec3 color = mix(vec3(0.0), vec3(1.0), clamp(line, 0.0, 1.0));
     gl_FragColor = vec4(color, 1.0);
   }
 `;
@@ -82,7 +82,7 @@ export const ReactiveGrid = ({ onPointerDown }: ReactiveGridProps) => {
                 vertexShader={vertexShader}
                 fragmentShader={fragmentShader}
                 uniforms={uniforms}
-                transparent
+                transparent={false}
             />
         </mesh>
     );
