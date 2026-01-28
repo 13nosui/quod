@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion-3d';
-import { GRID_SIZE } from '../../utils/gameUtils';
+import { COLORS, GRID_SIZE } from '../../utils/gameUtils';
 
 interface Block3DProps {
     x: number;
@@ -18,13 +18,14 @@ export const Block3D = ({ x, y, color }: Block3DProps) => {
     const targetX = (x - (GRID_SIZE - 1) / 2);
     const targetZ = (y - (GRID_SIZE - 1) / 2); // Map grid Y to 3D Z axis
 
-    // Snappy spring config
-    const springConfig = {
-        type: "spring",
-        stiffness: 450,
-        damping: 25,
-        mass: 1
-    };
+    // Dynamic spring profile based on jelly color
+    const springConfig = useMemo(() => {
+        if (color === COLORS[0]) return { stiffness: 120, damping: 10, mass: 1 };
+        if (color === COLORS[1]) return { stiffness: 160, damping: 15, mass: 1.2 };
+        if (color === COLORS[2]) return { stiffness: 80, damping: 6, mass: 0.8 };
+        if (color === COLORS[3]) return { stiffness: 180, damping: 8, mass: 1 };
+        return { stiffness: 120, damping: 10, mass: 1 };
+    }, [color]);
 
     return (
         <motion.mesh
@@ -39,8 +40,8 @@ export const Block3D = ({ x, y, color }: Block3DProps) => {
             castShadow
             receiveShadow
             transition={{
+                type: "spring",
                 ...springConfig,
-                // Only delay the initial appearance
                 delay: spawnDelay
             }}
         >
