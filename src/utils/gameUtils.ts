@@ -1,4 +1,4 @@
-import type { GridState, Point, SmallBlock, BigBlock } from '../types/game';
+import type { GridState, Point, SmallBlock } from '../types/game';
 
 export const GRID_SIZE = 5;
 
@@ -9,18 +9,10 @@ export const COLORS = [
     '#FFCA3A', // Yellow
     '#8AC926'  // Green
 ];
-export const BIG_BLOCK_COLOR = '#555555';
 
 export const createSmallBlock = (color?: string): SmallBlock => ({
     id: Math.random().toString(36).substr(2, 9),
     color: color || COLORS[Math.floor(Math.random() * COLORS.length)],
-});
-
-export const createBigBlock = (x: number, y: number): BigBlock => ({
-    id: Math.random().toString(36).substr(2, 9),
-    x,
-    y,
-    color: BIG_BLOCK_COLOR,
 });
 
 // --- マッチングロジック (p5.js logic port) ---
@@ -117,7 +109,7 @@ export const getAllMatches = (grid: GridState): Point[] => {
     return Array.from(uniquePoints.values());
 };
 
-// 特定セルがマッチに含まれているか（p5.js: isInstantMatch用）
+// 特定セルがマッチに含まれているか
 export const isPartOfAnyMatch = (grid: GridState, x: number, y: number): boolean => {
     if (!grid[x][y]) return false;
 
@@ -136,13 +128,8 @@ export const isPartOfAnyMatch = (grid: GridState, x: number, y: number): boolean
 
 // --- スライドロジック ---
 
-export const isOccupiedByBigBlock = (x: number, y: number, bigBlocks: BigBlock[]): boolean => {
-    return bigBlocks.some(b => x >= b.x && x < b.x + 2 && y >= b.y && y < b.y + 2);
-};
-
 export const slideGrid = (
     grid: GridState,
-    bigBlocks: BigBlock[],
     dx: number,
     dy: number
 ): { newGrid: GridState, moved: boolean } => {
@@ -165,7 +152,6 @@ export const slideGrid = (
                 while (true) {
                     if (nextX < 0 || nextX >= GRID_SIZE || nextY < 0 || nextY >= GRID_SIZE) break;
                     if (newGrid[nextX][nextY] !== null) break;
-                    if (isOccupiedByBigBlock(nextX, nextY, bigBlocks)) break;
 
                     destX = nextX;
                     destY = nextY;
@@ -185,13 +171,42 @@ export const slideGrid = (
     return { newGrid, moved };
 };
 
-export const isEmptyArea = (grid: GridState, bigBlocks: BigBlock[], x: number, y: number) => {
-    if (x + 1 >= GRID_SIZE || y + 1 >= GRID_SIZE) return false;
-    if (grid[x][y] || grid[x + 1][y] || grid[x][y + 1] || grid[x + 1][y + 1]) return false;
-    for (let bx = x; bx <= x + 1; bx++) {
-        for (let by = y; by <= y + 1; by++) {
-            if (isOccupiedByBigBlock(bx, by, bigBlocks)) return false;
+// 新しいゲームオーバー判定: 盤面がいっぱいで、かつどこを移動してもマッチができない状態 or 隣接/斜めに同じ色がない
+export const hasPossibleMatches = (grid: GridState): boolean => {
+    // 1. 空き場所があれば継続可能
+    for (let x = 0; x < GRID_SIZE; x++) {
+        for (let y = 0; y < GRID_SIZE; y++) {
+            if (!grid[x][y]) return true;
         }
     }
-    return true;
+
+    // 2. 空き場所がない場合、隣接（8方向）に同じ色があるかチェック
+    // 3つ繋がる可能性があるかチェックする
+    // 本来は「スライドによってマッチができるか」を全方向試すべきだが、
+    // シンプルに「現状でマッチがあるか」または「隣接に同色があるか」で判定する
+    // ここでは厳密に「今の盤面でマッチしているものがあるか」または「スライドして1つ開けばマッチするか」だが、
+    // 「盤面全埋まりかつ、隣接+斜め8方向に同色がない」を簡易判定とする
+    for (let x = 0; x < GRID_SIZE; x++) {
+        for (let y = 0; y < GRID_SIZE; y++) {
+            const current = grid[x][y];
+            if (!current) continue;
+
+            const neighbors = [
+                [0, 1], [0, -1], [1, 0], [-1, 0], // Ortho
+                [1, 1], [1, -1], [-1, 1], [-1, -1] // Diag
+            ];
+
+            for (const [nx, ny] of neighbors) {
+                const targetX = x + nx;
+                const targetY = y + ny;
+                if (isValid(targetX, targetY)) {
+                    if (grid[targetX][targetY]?.color === current.color) {
+                        return true; // 隣接に同色があれば、将来的にマッチする可能性がある
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
 };

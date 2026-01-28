@@ -4,22 +4,19 @@ import { GRID_SIZE } from '../../utils/gameUtils';
 interface Block3DProps {
     x: number;
     y: number;
-    type: 'big' | 'small';
+    type: 'small';
     color: string;
-    onClick?: () => void;
 }
 
-export const Block3D = ({ x, y, type, color, onClick }: Block3DProps) => {
-    const isBig = type === 'big';
+export const Block3D = ({ x, y, color }: Block3DProps) => {
+    // Convert grid coordinates to world coordinates
+    // Center of 5x5 grid (0-4) is 2. 
+    // Grid spans approx from -2 to 2.
+    const size = 0.9;
+    const targetX = (x - (GRID_SIZE - 1) / 2);
+    const targetY = - (y - (GRID_SIZE - 1) / 2); // Flip Y for 3D coordinate system
 
-    // Map grid coords to world coords (-5 to 5 space)
-    const worldX = (x / GRID_SIZE) * 10 - 4; // Shifted slightly for centers
-    const worldY = (1.0 - y / GRID_SIZE) * 10 - 6;
-
-    const size = isBig ? 3.8 : 1.8;
-    const targetX = isBig ? worldX + 1 : worldX;
-    const targetY = isBig ? worldY - 1 : worldY;
-
+    // Snappy spring config
     const springConfig = {
         type: "spring",
         stiffness: 450,
@@ -34,18 +31,12 @@ export const Block3D = ({ x, y, type, color, onClick }: Block3DProps) => {
                 scale: 1,
                 x: targetX,
                 y: targetY,
-                z: isBig ? 0.2 : 0.1
+                z: 0.1
             }}
             exit={{ scale: 0 }}
-            whileTap={{ scale: 0.9 }}
-            whileHover={{ scale: 1.05 }}
             transition={springConfig}
-            onPointerDown={(e: any) => {
-                e.stopPropagation();
-                onClick?.();
-            }}
         >
-            <boxGeometry args={[size, size, isBig ? 0.4 : 0.2]} />
+            <boxGeometry args={[size, size, 0.2]} />
             <meshStandardMaterial
                 color={color}
                 flatShading={true}

@@ -1,15 +1,8 @@
-export type BlockType = 'big' | 'small';
+export type BlockType = 'small';
 
 export interface SmallBlock {
     id: string;
     color: string;
-}
-
-export interface BigBlock {
-    id: string;
-    x: number;
-    y: number;
-    color: string; // #555555
 }
 
 export type GridState = (SmallBlock | null)[][];

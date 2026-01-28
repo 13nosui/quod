@@ -1,13 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
-import type { GridState, Direction, BigBlock, Point } from '../types/game';
+import type { GridState, Direction, Point } from '../types/game';
 import {
     GRID_SIZE,
     createSmallBlock,
-    createBigBlock,
     getAllMatches,
     slideGrid,
-    isEmptyArea,
-    isPartOfAnyMatch
+    hasPossibleMatches
 } from '../utils/gameUtils';
 import { playSound } from '../utils/sounds';
 
@@ -15,18 +13,38 @@ export const useGameLogic = () => {
     const [smallBlocks, setSmallBlocks] = useState<GridState>(() =>
         Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null))
     );
-    const [bigBlocks, setBigBlocks] = useState<BigBlock[]>([]);
 
     const [score, setScore] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
     const [gameOver, setGameOver] = useState(false);
 
+    // Get random empty position
+    const getRandomEmptyPos = (grid: GridState): Point | null => {
+        const empties: Point[] = [];
+        for (let x = 0; x < GRID_SIZE; x++) {
+            for (let y = 0; y < GRID_SIZE; y++) {
+                if (!grid[x][y]) empties.push({ x, y });
+            }
+        }
+        if (empties.length === 0) return null;
+        return empties[Math.floor(Math.random() * empties.length)];
+    };
+
+    const spawnBlocksOnGrid = (grid: GridState, count: number): GridState => {
+        const newGrid = grid.map(row => [...row]);
+        for (let i = 0; i < count; i++) {
+            const pos = getRandomEmptyPos(newGrid);
+            if (pos) {
+                newGrid[pos.x][pos.y] = createSmallBlock();
+            }
+        }
+        return newGrid;
+    };
+
     const resetGame = useCallback(() => {
-        setSmallBlocks(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
-        setBigBlocks([
-            createBigBlock(0, 0),
-            createBigBlock(3, 3)
-        ]);
+        const emptyGrid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
+        const initialGrid = spawnBlocksOnGrid(emptyGrid, Math.floor(Math.random() * 2) + 3); // 3 to 4 blocks
+        setSmallBlocks(initialGrid);
         setScore(0);
         setGameOver(false);
         setIsProcessing(false);
@@ -36,28 +54,17 @@ export const useGameLogic = () => {
         resetGame();
     }, [resetGame]);
 
-    // ターン終了処理
-    const endTurn = (finalGrid: GridState, currentBigBlocks: BigBlock[]) => {
-        const candidates: Point[] = [];
-        for (let x = 0; x < GRID_SIZE - 1; x++) {
-            for (let y = 0; y < GRID_SIZE - 1; y++) {
-                if (isEmptyArea(finalGrid, currentBigBlocks, x, y)) {
-                    candidates.push({ x, y });
-                }
-            }
-        }
+    // Turn end check: Spawning and matching
+    const endTurn = async (gridAfterSlide: GridState, dx: number, dy: number) => {
+        setIsProcessing(true);
 
-        if (candidates.length > 0) {
-            const pos = candidates[Math.floor(Math.random() * candidates.length)];
-            setBigBlocks(prev => [...prev, createBigBlock(pos.x, pos.y)]);
-        } else {
-            setGameOver(true);
-        }
-        setIsProcessing(false);
-    };
+        // 1. New Spawn (Swipe resulted in move)
+        const gridWithNewSpawn = spawnBlocksOnGrid(gridAfterSlide, 1);
+        setSmallBlocks(gridWithNewSpawn);
+        await new Promise(r => setTimeout(r, 150));
 
-    const runChainReaction = async (startGrid: GridState, dx: number, dy: number) => {
-        let currentGrid = startGrid;
+        // 2. Chain Reaction Matches
+        let currentGrid = gridWithNewSpawn;
         let loop = true;
 
         while (loop) {
@@ -75,16 +82,25 @@ export const useGameLogic = () => {
             setSmallBlocks(tempGrid);
             await new Promise(r => setTimeout(r, 250));
 
-            const { newGrid: slidGrid } = slideGrid(tempGrid, bigBlocks, dx, dy);
-            setSmallBlocks(slidGrid);
-            currentGrid = slidGrid;
-            await new Promise(r => setTimeout(r, 150));
+            const { newGrid: slidGrid } = slideGrid(tempGrid, dx, dy);
+
+            // If sliding after matches actually moves things, update state and wait
+            if (JSON.stringify(slidGrid) !== JSON.stringify(tempGrid)) {
+                setSmallBlocks(slidGrid);
+                currentGrid = slidGrid;
+                await new Promise(r => setTimeout(r, 150));
+            } else {
+                currentGrid = tempGrid;
+                loop = false;
+            }
         }
 
-        // 状態更新のタイミングの問題を避けるため、関数呼び出し時の最新bigBlocksを渡すか、
-        // ここではstate更新関数の中で処理を完結させるのが理想ですが、
-        // 簡易的に現在のstate依存で呼び出します (実動作上はほぼ問題なし)
-        endTurn(currentGrid, bigBlocks);
+        // 3. Check Game Over
+        if (!hasPossibleMatches(currentGrid)) {
+            setGameOver(true);
+        }
+
+        setIsProcessing(false);
     };
 
     const slide = useCallback((direction: Direction) => {
@@ -96,78 +112,15 @@ export const useGameLogic = () => {
         if (direction === 'UP') dy = -1;
         if (direction === 'DOWN') dy = 1;
 
-        const { newGrid, moved } = slideGrid(smallBlocks, bigBlocks, dx, dy);
+        const { newGrid, moved } = slideGrid(smallBlocks, dx, dy);
 
         if (moved) {
             playSound('slide');
             setSmallBlocks(newGrid);
-            setIsProcessing(true);
-            setTimeout(() => runChainReaction(newGrid, dx, dy), 150);
+            // We moved, so we trigger the end-turn sequence (Spawn + Match)
+            endTurn(newGrid, dx, dy);
         }
-    }, [smallBlocks, bigBlocks, isProcessing, gameOver]);
+    }, [smallBlocks, isProcessing, gameOver]);
 
-    const breakBlock = useCallback((x: number, y: number) => {
-        if (isProcessing || gameOver) return;
-
-        const targetIndex = bigBlocks.findIndex(b =>
-            x >= b.x && x < b.x + 2 && y >= b.y && y < b.y + 2
-        );
-
-        if (targetIndex !== -1) {
-            const block = bigBlocks[targetIndex];
-            playSound('break');
-
-            const newBigBlocks = [...bigBlocks];
-            newBigBlocks.splice(targetIndex, 1);
-            setBigBlocks(newBigBlocks);
-
-            // p5.js logic: Try to find a config that doesn't instantly match
-            let validConfig = false;
-            let attempts = 0;
-
-            // Temporary grid to test matches
-            const tempGrid = smallBlocks.map(row => [...row]);
-
-            while (!validConfig && attempts < 50) {
-                attempts++;
-                // Generate 4 random blocks
-                const c1 = createSmallBlock();
-                const c2 = createSmallBlock();
-                const c3 = createSmallBlock();
-                const c4 = createSmallBlock();
-
-                tempGrid[block.x][block.y] = c1;
-                tempGrid[block.x + 1][block.y] = c2;
-                tempGrid[block.x][block.y + 1] = c3;
-                tempGrid[block.x + 1][block.y + 1] = c4;
-
-                // Check if any of these 4 cause an immediate match
-                if (!isPartOfAnyMatch(tempGrid, block.x, block.y) &&
-                    !isPartOfAnyMatch(tempGrid, block.x + 1, block.y) &&
-                    !isPartOfAnyMatch(tempGrid, block.x, block.y + 1) &&
-                    !isPartOfAnyMatch(tempGrid, block.x + 1, block.y + 1)) {
-                    validConfig = true;
-                    // Apply to real state
-                    const newSmallBlocks = smallBlocks.map(row => [...row]);
-                    newSmallBlocks[block.x][block.y] = c1;
-                    newSmallBlocks[block.x + 1][block.y] = c2;
-                    newSmallBlocks[block.x][block.y + 1] = c3;
-                    newSmallBlocks[block.x + 1][block.y + 1] = c4;
-                    setSmallBlocks(newSmallBlocks);
-                }
-            }
-
-            // Fallback if 50 attempts fail (just spawn anyway)
-            if (!validConfig) {
-                const newSmallBlocks = smallBlocks.map(row => [...row]);
-                newSmallBlocks[block.x][block.y] = createSmallBlock();
-                newSmallBlocks[block.x + 1][block.y] = createSmallBlock();
-                newSmallBlocks[block.x][block.y + 1] = createSmallBlock();
-                newSmallBlocks[block.x + 1][block.y + 1] = createSmallBlock();
-                setSmallBlocks(newSmallBlocks);
-            }
-        }
-    }, [bigBlocks, smallBlocks, isProcessing, gameOver]);
-
-    return { smallBlocks, bigBlocks, slide, breakBlock, score, gameOver, isProcessing, resetGame };
+    return { smallBlocks, slide, score, gameOver, isProcessing, resetGame };
 };

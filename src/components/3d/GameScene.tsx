@@ -2,16 +2,14 @@ import { Canvas } from '@react-three/fiber';
 import { OrthographicCamera, Environment } from '@react-three/drei';
 import { ReactiveGrid } from './ReactiveGrid';
 import { Block3D } from './Block3D';
-import type { GridState, BigBlock } from '../../types/game';
+import type { GridState } from '../../types/game';
 import { AnimatePresence } from 'framer-motion';
 
 interface GameSceneProps {
     smallBlocks: GridState;
-    bigBlocks: BigBlock[];
-    onBlockClick: (x: number, y: number) => void;
 }
 
-export const GameScene = ({ smallBlocks, bigBlocks, onBlockClick }: GameSceneProps) => {
+export const GameScene = ({ smallBlocks }: GameSceneProps) => {
     return (
         <div style={{ width: 'min(90vw, 500px)', height: 'min(90vw, 500px)', position: 'relative' }}>
             <Canvas shadows dpr={[1, 2]}>
@@ -28,7 +26,6 @@ export const GameScene = ({ smallBlocks, bigBlocks, onBlockClick }: GameScenePro
                 <ReactiveGrid />
 
                 <AnimatePresence>
-                    {/* Small Blocks */}
                     {smallBlocks.flatMap((col, x) =>
                         col.map((block, y) => {
                             if (!block) return null;
@@ -43,18 +40,6 @@ export const GameScene = ({ smallBlocks, bigBlocks, onBlockClick }: GameScenePro
                             );
                         })
                     )}
-
-                    {/* Big Blocks */}
-                    {bigBlocks.map((block) => (
-                        <Block3D
-                            key={block.id}
-                            x={block.x}
-                            y={block.y}
-                            type="big"
-                            color={block.color}
-                            onClick={() => onBlockClick(block.x, block.y)}
-                        />
-                    ))}
                 </AnimatePresence>
 
                 <Environment preset="city" />
