@@ -16,7 +16,7 @@ export const GameScene = ({ smallBlocks }: GameSceneProps) => {
                 <OrthographicCamera
                     makeDefault
                     position={[0, 0, 10]}
-                    zoom={50}
+                    zoom={100}
                 />
 
                 <ambientLight intensity={0.5} />

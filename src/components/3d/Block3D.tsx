@@ -12,7 +12,7 @@ export const Block3D = ({ x, y, color }: Block3DProps) => {
     // Convert grid coordinates to world coordinates
     // Center of 5x5 grid (0-4) is 2. 
     // Grid spans approx from -2 to 2.
-    const size = 0.9;
+    const size = 0.96;
     const targetX = (x - (GRID_SIZE - 1) / 2);
     const targetY = - (y - (GRID_SIZE - 1) / 2); // Flip Y for 3D coordinate system
 
