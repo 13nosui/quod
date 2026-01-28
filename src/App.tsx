@@ -14,6 +14,7 @@ function App() {
         gameOver={game.gameOver}
         isProcessing={game.isProcessing}
         nextSpawnColors={game.nextSpawnColors}
+        nextSpawnPos={game.nextSpawnPos}
       />
 
       <AnimatePresence>

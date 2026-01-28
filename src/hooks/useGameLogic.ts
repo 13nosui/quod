@@ -6,7 +6,8 @@ import {
     createSmallBlock,
     getAllMatches,
     slideGrid,
-    findRandom2x2EmptyArea
+    findRandom2x2EmptyArea,
+    is2x2AreaEmpty
 } from '../utils/gameUtils';
 import { playSound } from '../utils/sounds';
 
@@ -32,6 +33,7 @@ export const useGameLogic = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [gameOver, setGameOver] = useState(false);
     const [nextSpawnColors, setNextSpawnColors] = useState<string[]>([]);
+    const [nextSpawnPos, setNextSpawnPos] = useState<Point | null>(null);
 
     const spawn2x2At = (grid: GridState, pos: Point, colors: string[]): GridState => {
         const newGrid = grid.map(row => [...row]);
@@ -56,6 +58,7 @@ export const useGameLogic = () => {
         }
 
         setNextSpawnColors(nextBatch);
+        setNextSpawnPos(findRandom2x2EmptyArea(pos ? spawn2x2At(emptyGrid, pos, initialColors) : emptyGrid));
         setScore(0);
         setGameOver(false);
         setIsProcessing(false);
@@ -70,7 +73,12 @@ export const useGameLogic = () => {
         setIsProcessing(true);
 
         // 1. Spawning 2x2 Cluster
-        const pos = findRandom2x2EmptyArea(gridAfterSlide);
+        let pos = nextSpawnPos;
+
+        // If the pre-calculated position is now blocked, find a new one
+        if (!pos || !is2x2AreaEmpty(gridAfterSlide, pos.x, pos.y)) {
+            pos = findRandom2x2EmptyArea(gridAfterSlide);
+        }
 
         if (!pos) {
             setGameOver(true);
@@ -118,9 +126,11 @@ export const useGameLogic = () => {
         }
 
         // Final check for 2x2 space after all matches and falls
-        if (!findRandom2x2EmptyArea(currentGrid)) {
+        const futurePos = findRandom2x2EmptyArea(currentGrid);
+        if (!futurePos) {
             setGameOver(true);
         }
+        setNextSpawnPos(futurePos);
 
         setIsProcessing(false);
     };
@@ -144,5 +154,5 @@ export const useGameLogic = () => {
         }
     }, [smallBlocks, isProcessing, gameOver]);
 
-    return { smallBlocks, slide, score, gameOver, isProcessing, resetGame, nextSpawnColors };
+    return { smallBlocks, slide, score, gameOver, isProcessing, resetGame, nextSpawnColors, nextSpawnPos };
 };

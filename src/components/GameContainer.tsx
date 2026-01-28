@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import type { Direction, GridState } from '../types/game';
+import type { Direction, GridState, Point } from '../types/game';
 import { GameScene } from './3d/GameScene';
 import { motion } from 'framer-motion';
 
@@ -10,6 +10,7 @@ interface GameContainerProps {
     gameOver: boolean;
     isProcessing: boolean;
     nextSpawnColors: string[];
+    nextSpawnPos: Point | null;
 }
 
 export const GameContainer = ({
@@ -18,7 +19,8 @@ export const GameContainer = ({
     score,
     gameOver,
     isProcessing,
-    nextSpawnColors
+    nextSpawnColors,
+    nextSpawnPos
 }: GameContainerProps) => {
 
     const handleSlide = useCallback((dir: Direction) => {
@@ -66,6 +68,8 @@ export const GameContainer = ({
 
             <GameScene
                 smallBlocks={smallBlocks}
+                nextSpawnPos={nextSpawnPos}
+                nextSpawnColors={nextSpawnColors}
             />
 
             <div className="flex flex-col items-center gap-1">

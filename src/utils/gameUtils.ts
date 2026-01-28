@@ -126,6 +126,11 @@ export const isPartOfAnyMatch = (grid: GridState, x: number, y: number): boolean
     return false;
 };
 
+export const is2x2AreaEmpty = (grid: GridState, x: number, y: number): boolean => {
+    if (x < 0 || x > GRID_SIZE - 2 || y < 0 || y > GRID_SIZE - 2) return false;
+    return !grid[x][y] && !grid[x + 1][y] && !grid[x][y + 1] && !grid[x + 1][y + 1];
+};
+
 export const findRandom2x2EmptyArea = (grid: GridState): Point | null => {
     const validAreas: Point[] = [];
 
