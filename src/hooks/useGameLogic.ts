@@ -21,12 +21,20 @@ export const useGameLogic = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [gameOver, setGameOver] = useState(false);
 
-    useEffect(() => {
+    const resetGame = useCallback(() => {
+        setSmallBlocks(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
         setBigBlocks([
             createBigBlock(0, 0),
             createBigBlock(3, 3)
         ]);
+        setScore(0);
+        setGameOver(false);
+        setIsProcessing(false);
     }, []);
+
+    useEffect(() => {
+        resetGame();
+    }, [resetGame]);
 
     // ターン終了処理
     const endTurn = (finalGrid: GridState, currentBigBlocks: BigBlock[]) => {
@@ -161,5 +169,5 @@ export const useGameLogic = () => {
         }
     }, [bigBlocks, smallBlocks, isProcessing, gameOver]);
 
-    return { smallBlocks, bigBlocks, slide, breakBlock, score, gameOver, isProcessing };
+    return { smallBlocks, bigBlocks, slide, breakBlock, score, gameOver, isProcessing, resetGame };
 };

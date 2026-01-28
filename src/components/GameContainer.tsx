@@ -1,10 +1,27 @@
 import { useEffect } from 'react';
-import { useGameLogic } from '../hooks/useGameLogic';
+import type { Direction, GridState, BigBlock } from '../types/game';
 import { Grid } from './Grid';
 import { motion } from 'framer-motion';
 
-export const GameContainer = () => {
-    const { smallBlocks, bigBlocks, slide, breakBlock, score, gameOver, isProcessing } = useGameLogic();
+interface GameContainerProps {
+    smallBlocks: GridState;
+    bigBlocks: BigBlock[];
+    slide: (direction: Direction) => void;
+    breakBlock: (x: number, y: number) => void;
+    score: number;
+    gameOver: boolean;
+    isProcessing: boolean;
+}
+
+export const GameContainer = ({
+    smallBlocks,
+    bigBlocks,
+    slide,
+    breakBlock,
+    score,
+    gameOver,
+    isProcessing
+}: GameContainerProps) => {
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
