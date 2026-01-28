@@ -17,6 +17,7 @@ export const GameScene = ({ smallBlocks }: GameSceneProps) => {
                     makeDefault
                     position={[6, 6, 6]}
                     fov={50}
+                    onUpdate={(c) => c.lookAt(0, 0, 0)}
                 />
 
                 <ambientLight intensity={0.5} />

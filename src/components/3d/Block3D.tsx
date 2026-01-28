@@ -13,10 +13,10 @@ export const Block3D = ({ x, y, color }: Block3DProps) => {
     // Random stagger for spawn animation
     const spawnDelay = useMemo(() => Math.random() * 0.15, []);
 
-    // Convert grid coordinates to world coordinates
+    // Convert grid coordinates to world coordinates (XZ Floor Plane)
     const size = 0.96;
     const targetX = (x - (GRID_SIZE - 1) / 2);
-    const targetY = - (y - (GRID_SIZE - 1) / 2); // Flip Y for 3D coordinate system
+    const targetZ = (y - (GRID_SIZE - 1) / 2); // Map grid Y to 3D Z axis
 
     // Snappy spring config
     const springConfig = {
@@ -28,12 +28,12 @@ export const Block3D = ({ x, y, color }: Block3DProps) => {
 
     return (
         <motion.mesh
-            initial={{ scale: 0, x: targetX, y: targetY, z: size / 2 }}
+            initial={{ scale: 0, x: targetX, y: size / 2, z: targetZ }}
             animate={{
                 scale: 1,
                 x: targetX,
-                y: targetY,
-                z: size / 2
+                y: size / 2,
+                z: targetZ
             }}
             exit={{ scale: 0 }}
             castShadow

@@ -63,7 +63,7 @@ declare module '@react-three/fiber' {
 
 export const ReactiveGrid = () => {
     return (
-        <mesh position={[0, 0, -0.05]} receiveShadow>
+        <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
             <planeGeometry args={[GRID_SIZE, GRID_SIZE]} />
             <shardsGridMaterial
                 uBgColor={new THREE.Color('#ffffff')}
