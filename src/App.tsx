@@ -6,7 +6,7 @@ function App() {
   const game = useGameLogic();
 
   return (
-    <main className="relative w-full min-h-screen bg-[#f8f8f8] text-[#1a1a1a] overflow-hidden">
+    <main className="relative w-full min-h-screen bg-black text-white overflow-hidden font-sans">
       <GameContainer
         smallBlocks={game.smallBlocks}
         bigBlocks={game.bigBlocks}
