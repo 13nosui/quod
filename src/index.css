@@ -13,6 +13,14 @@
   font-family: var(--font-sans);
   background-color: #ffffff;
   color: #000000;
+
+  --grid-width: min(90vw, 500px);
+  --grid-gap: 4px;
+  --grid-padding: 8px;
+  --grid-cells: 5;
+  /* GRID_SIZE is 5 */
+  /* Calculate cell size: (grid-width - 2 * padding - (grid-cells - 1) * gap) / grid-cells */
+  --cell-size: calc((var(--grid-width) - 2 * var(--grid-padding) - (var(--grid-cells) - 1) * var(--grid-gap)) / var(--grid-cells));
 }
 
 body {

@@ -9,55 +9,35 @@ function cn(...inputs: ClassValue[]) {
 interface BlockProps {
     type: 'big' | 'small';
     color: string;
-    onReaction?: () => void;
-    onClick: () => void;
+    onClick?: () => void;
 }
 
-export const Block = ({ type, color, onReaction, onClick }: BlockProps) => {
+export const Block = ({ type, color, onClick }: BlockProps) => {
     const isBig = type === 'big';
-
-    // Tactile Spring Config
-    const springConfig = {
-        type: "spring" as const,
-        stiffness: 400,
-        damping: 25,
-        mass: 1
-    };
-
-    const handleClick = () => {
-        onReaction?.();
-        onClick();
-    };
 
     return (
         <motion.div
             layout
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={springConfig}
-            whileHover={{
-                scale: 1.05,
-                transition: { type: "spring", stiffness: 600, damping: 20 }
-            }}
-            whileTap={{ scale: 0.95 }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
             className={cn(
-                "relative flex items-center justify-center cursor-pointer select-none",
-                isBig ? "rounded-lg" : "rounded-sm",
-                "w-full h-full",
-                "block-shadow glow-edge",
-                isBig ? "z-10 shadow-[0_0_20px_rgba(255,255,255,0.1)]" : "z-0"
+                "relative flex items-center justify-center cursor-pointer select-none rounded-md",
+                "shadow-sm"
             )}
             style={{
-                backgroundColor: color + 'CC', // slightly transparent
+                backgroundColor: color,
+                // Set width and height using the custom property
+                width: isBig ? 'calc(2 * var(--cell-size) + var(--grid-gap))' : 'var(--cell-size)',
+                height: isBig ? 'calc(2 * var(--cell-size) + var(--grid-gap))' : 'var(--cell-size)',
             }}
-            onClick={handleClick}
+            onClick={onClick}
+            whileTap={{ scale: 0.95 }}
         >
             {/* Inner Detail */}
-            <div className="absolute inset-x-1 inset-y-1 border border-white/20 rounded-sm pointer-events-none" />
+            <div className="absolute inset-0 border-2 border-white/20 rounded-md" />
 
             {isBig && (
-                <div className="absolute inset-3 border-2 border-white/30 rounded-md pointer-events-none shadow-[inset_0_0_10px_rgba(255,255,255,0.1)]" />
+                <div className="absolute inset-2 border border-black/10 rounded-sm" />
             )}
         </motion.div>
     );

@@ -31,13 +31,13 @@ export const Grid = ({ smallBlocks }: GridProps) => {
             key={pulse} // Trigger animation on state change
             className="relative bg-white border border-black/5 grid-inner-shadow overflow-hidden"
             style={{
-                width: 'min(90vw, 500px)',
-                height: 'min(90vw, 500px)',
+                width: 'var(--grid-width)',
+                height: 'var(--grid-width)',
                 display: 'grid',
                 gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
                 gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
-                gap: '1px',
-                padding: '2px'
+                gap: 'var(--grid-gap)',
+                padding: 'var(--grid-padding)'
             }}
         >
             {/* Correct Rendering Loop for Col-Major Array in CSS Grid (Row-Major) */}
