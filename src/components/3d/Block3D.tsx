@@ -28,7 +28,7 @@ export const Block3D = ({ x, y, color }: Block3DProps) => {
 
     return (
         <motion.mesh
-            initial={{ scale: 0 }}
+            initial={{ scale: 0, x: targetX, y: targetY, z: 0.1 }}
             animate={{
                 scale: 1,
                 x: targetX,
