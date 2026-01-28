@@ -126,6 +126,23 @@ export const isPartOfAnyMatch = (grid: GridState, x: number, y: number): boolean
     return false;
 };
 
+export const findRandom2x2EmptyArea = (grid: GridState): Point | null => {
+    const validAreas: Point[] = [];
+
+    // Scan for 2x2 empty spots
+    // Range is 0 to GRID_SIZE - 2 for both axes
+    for (let x = 0; x <= GRID_SIZE - 2; x++) {
+        for (let y = 0; y <= GRID_SIZE - 2; y++) {
+            if (!grid[x][y] && !grid[x + 1][y] && !grid[x][y + 1] && !grid[x + 1][y + 1]) {
+                validAreas.push({ x, y });
+            }
+        }
+    }
+
+    if (validAreas.length === 0) return null;
+    return validAreas[Math.floor(Math.random() * validAreas.length)];
+};
+
 // --- スライドロジック ---
 
 export const slideGrid = (

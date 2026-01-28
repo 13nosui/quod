@@ -5,7 +5,7 @@ import {
     createSmallBlock,
     getAllMatches,
     slideGrid,
-    hasPossibleMatches
+    findRandom2x2EmptyArea
 } from '../utils/gameUtils';
 import { playSound } from '../utils/sounds';
 
@@ -18,33 +18,23 @@ export const useGameLogic = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [gameOver, setGameOver] = useState(false);
 
-    // Get random empty position
-    const getRandomEmptyPos = (grid: GridState): Point | null => {
-        const empties: Point[] = [];
-        for (let x = 0; x < GRID_SIZE; x++) {
-            for (let y = 0; y < GRID_SIZE; y++) {
-                if (!grid[x][y]) empties.push({ x, y });
-            }
-        }
-        if (empties.length === 0) return null;
-        return empties[Math.floor(Math.random() * empties.length)];
-    };
-
-    const spawnBlocksOnGrid = (grid: GridState, count: number): GridState => {
+    const spawn2x2At = (grid: GridState, pos: Point): GridState => {
         const newGrid = grid.map(row => [...row]);
-        for (let i = 0; i < count; i++) {
-            const pos = getRandomEmptyPos(newGrid);
-            if (pos) {
-                newGrid[pos.x][pos.y] = createSmallBlock();
-            }
-        }
+        newGrid[pos.x][pos.y] = createSmallBlock();
+        newGrid[pos.x + 1][pos.y] = createSmallBlock();
+        newGrid[pos.x][pos.y + 1] = createSmallBlock();
+        newGrid[pos.x + 1][pos.y + 1] = createSmallBlock();
         return newGrid;
     };
 
     const resetGame = useCallback(() => {
         const emptyGrid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
-        const initialGrid = spawnBlocksOnGrid(emptyGrid, Math.floor(Math.random() * 2) + 3); // 3 to 4 blocks
-        setSmallBlocks(initialGrid);
+        const pos = findRandom2x2EmptyArea(emptyGrid);
+        if (pos) {
+            setSmallBlocks(spawn2x2At(emptyGrid, pos));
+        } else {
+            setSmallBlocks(emptyGrid);
+        }
         setScore(0);
         setGameOver(false);
         setIsProcessing(false);
@@ -54,14 +44,24 @@ export const useGameLogic = () => {
         resetGame();
     }, [resetGame]);
 
-    // Turn end check: Spawning and matching
+    // Turn end check: Spawning 2x2 and matching
     const endTurn = async (gridAfterSlide: GridState, dx: number, dy: number) => {
         setIsProcessing(true);
 
-        // 1. New Spawn (Swipe resulted in move)
-        const gridWithNewSpawn = spawnBlocksOnGrid(gridAfterSlide, 1);
+        // 1. Spawning 2x2 Cluster
+        const pos = findRandom2x2EmptyArea(gridAfterSlide);
+
+        if (!pos) {
+            setGameOver(true);
+            setIsProcessing(false);
+            return;
+        }
+
+        const gridWithNewSpawn = spawn2x2At(gridAfterSlide, pos);
         setSmallBlocks(gridWithNewSpawn);
-        await new Promise(r => setTimeout(r, 150));
+
+        // Wait for spawn animation (200ms)
+        await new Promise(r => setTimeout(r, 200));
 
         // 2. Chain Reaction Matches
         let currentGrid = gridWithNewSpawn;
@@ -95,8 +95,8 @@ export const useGameLogic = () => {
             }
         }
 
-        // 3. Check Game Over
-        if (!hasPossibleMatches(currentGrid)) {
+        // Final check for 2x2 space after all matches and falls
+        if (!findRandom2x2EmptyArea(currentGrid)) {
             setGameOver(true);
         }
 
@@ -117,7 +117,7 @@ export const useGameLogic = () => {
         if (moved) {
             playSound('slide');
             setSmallBlocks(newGrid);
-            // We moved, so we trigger the end-turn sequence (Spawn + Match)
+            // We moved, so we trigger the end-turn sequence (2x2 Spawn + Match)
             endTurn(newGrid, dx, dy);
         }
     }, [smallBlocks, isProcessing, gameOver]);
