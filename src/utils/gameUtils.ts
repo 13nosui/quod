@@ -4,10 +4,10 @@ export const GRID_SIZE = 5;
 
 // p5.js: COLORS definition
 export const COLORS = [
-    '#FF595E', // Red
-    '#1982C4', // Blue
-    '#FFCA3A', // Yellow
-    '#8AC926'  // Green
+    '#FF0033', // Red
+    '#0066FF', // Blue
+    '#FFCC00', // Yellow
+    '#33CC33'  // Green
 ];
 
 export const createSmallBlock = (color?: string): SmallBlock => ({
