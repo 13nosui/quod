@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import type { Direction, GridState, BigBlock } from '../types/game';
-import { GameScene } from './3d/GameScene';
+import { GameScene, type GameSceneHandle } from './3d/GameScene';
 import { motion } from 'framer-motion';
+import { GRID_SIZE } from '../utils/gameUtils';
 
 interface GameContainerProps {
     smallBlocks: GridState;
@@ -22,19 +23,39 @@ export const GameContainer = ({
     gameOver,
     isProcessing
 }: GameContainerProps) => {
+    const sceneRef = useRef<GameSceneHandle>(null);
+
+    // Helper to map grid coords to world coords for ripple effect
+    // Grid matches Block3D mapping: worldX = (x/5)*10 - 4
+    const triggerRippleAt = useCallback((x: number, y: number, isBig: boolean = false) => {
+        const worldX = (x / GRID_SIZE) * 10 - 4 + (isBig ? 1 : 0);
+        const worldY = (1.0 - y / GRID_SIZE) * 10 - 6 - (isBig ? 1 : 0);
+        sceneRef.current?.triggerRipple(worldX, worldY);
+    }, []);
+
+    const handleSlide = useCallback((dir: Direction) => {
+        slide(dir);
+        // Trigger generic "shake" ripples at centers for slide feedback
+        triggerRippleAt(2, 2, false);
+    }, [slide, triggerRippleAt]);
+
+    const handleBreak = useCallback((x: number, y: number) => {
+        breakBlock(x, y);
+        triggerRippleAt(x, y, true);
+    }, [breakBlock, triggerRippleAt]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             switch (e.key) {
-                case 'ArrowUp': slide('UP'); break;
-                case 'ArrowDown': slide('DOWN'); break;
-                case 'ArrowLeft': slide('LEFT'); break;
-                case 'ArrowRight': slide('RIGHT'); break;
+                case 'ArrowUp': handleSlide('UP'); break;
+                case 'ArrowDown': handleSlide('DOWN'); break;
+                case 'ArrowLeft': handleSlide('LEFT'); break;
+                case 'ArrowRight': handleSlide('RIGHT'); break;
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [slide]);
+    }, [handleSlide]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4 gap-8 select-none">
@@ -46,9 +67,10 @@ export const GameContainer = ({
             </div>
 
             <GameScene
+                ref={sceneRef}
                 smallBlocks={smallBlocks}
                 bigBlocks={bigBlocks}
-                onBlockClick={breakBlock}
+                onBlockClick={handleBreak}
             />
 
             <div className="flex flex-col items-center gap-1">

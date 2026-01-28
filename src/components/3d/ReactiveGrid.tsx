@@ -1,89 +1,118 @@
-import { useRef, useMemo } from 'react';
-import { useFrame, type ThreeEvent } from '@react-three/fiber';
+import { useRef, forwardRef, useImperativeHandle } from 'react';
+import { useFrame, extend, type ThreeElement } from '@react-three/fiber';
 import * as THREE from 'three';
+import { shaderMaterial } from '@react-three/drei';
 import { GRID_SIZE } from '../../utils/gameUtils';
 
-const vertexShader = `
+// Define the custom shader material
+const GridMaterial = shaderMaterial(
+    {
+        uTime: 0,
+        uImpulse: new THREE.Vector2(0.5, 0.5),
+        uStrength: 0,
+        uColor: new THREE.Color('#ffffff'),
+        uGridSize: GRID_SIZE,
+    },
+    // Vertex Shader: Fluid/Elastic distortion
+    `
   varying vec2 vUv;
-  uniform vec3 uImpulse;
   uniform float uTime;
+  uniform vec2 uImpulse;
+  uniform float uStrength;
+
+  // Simple noise function for "alive" movement
+  float noise(vec2 p) {
+    return sin(p.x * 10.0 + uTime) * cos(p.y * 10.0 + uTime) * 0.02;
+  }
 
   void main() {
     vUv = uv;
     vec3 pos = position;
 
-    // Displacement Logic
-    float dist = distance(uv, uImpulse.xy);
-    float force = uImpulse.z * exp(-dist * 10.0);
-    pos.z += sin(dist * 20.0 - uTime * 5.0) * force * 0.1;
-    pos.z += force * 0.2;
+    // 1. Ripple / Impulse Distortion
+    float dist = distance(uv, uImpulse);
+    float ripple = sin(dist * 20.0 - uTime * 10.0) * exp(-dist * 5.0) * uStrength;
+    
+    // 2. Elastic displacement (2D push effect)
+    vec2 dir = normalize(uv - uImpulse);
+    float push = exp(-dist * 8.0) * uStrength * 0.5;
+    
+    pos.xy += dir * push;
+    pos.z += ripple * 0.5;
+
+    // 3. Constant "alive" noise
+    pos.z += noise(uv * 2.0);
+    pos.x += noise(uv * 1.5 + 1.0);
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
   }
-`;
-
-const fragmentShader = `
+  `,
+    // Fragment Shader: Sharp grid lines
+    `
   varying vec2 vUv;
   uniform float uGridSize;
+  uniform vec3 uColor;
 
   void main() {
     vec2 grid = fract(vUv * uGridSize);
+    // Sharp lines with width ~0.02
     float line = step(0.98, grid.x) + step(0.98, grid.y);
-    vec3 color = mix(vec3(0.0), vec3(1.0), clamp(line, 0.0, 1.0));
-    gl_FragColor = vec4(color, 1.0);
-  }
-`;
+    line = clamp(line, 0.0, 1.0);
+    
+    if (line < 0.1) discard; // Keep background black
 
-interface ReactiveGridProps {
-    onPointerDown?: (x: number, y: number) => void;
+    gl_FragColor = vec4(uColor, 1.0);
+  }
+  `
+);
+
+extend({ GridMaterial });
+
+// Add to ThreeElements for TS support
+declare module '@react-three/fiber' {
+    interface ThreeElements {
+        gridMaterial: ThreeElement<typeof GridMaterial>
+    }
 }
 
-export const ReactiveGrid = ({ onPointerDown }: ReactiveGridProps) => {
-    const meshRef = useRef<THREE.Mesh>(null);
-    const materialRef = useRef<THREE.ShaderMaterial>(null);
+export interface ReactiveGridHandle {
+    trigger: (x: number, y: number) => void;
+}
 
-    const uniforms = useMemo(() => ({
-        uTime: { value: 0 },
-        uGridSize: { value: GRID_SIZE },
-        uImpulse: { value: new THREE.Vector3(0.5, 0.5, 0.0) }
-    }), []);
+export const ReactiveGrid = forwardRef<ReactiveGridHandle, {}>((_, ref) => {
+    const materialRef = useRef<any>(null);
+
+    useImperativeHandle(ref, () => ({
+        trigger: (x: number, y: number) => {
+            if (materialRef.current) {
+                // Map world coords (approx -5 to 5) back to UV (0 to 1)
+                // Grid is 10x10 centered at 0,0
+                const u = (x + 5) / 10;
+                const v = (y + 5) / 10;
+                materialRef.current.uImpulse.set(u, v);
+                materialRef.current.uStrength = 1.0;
+            }
+        }
+    }));
 
     useFrame((state) => {
         if (materialRef.current) {
-            materialRef.current.uniforms.uTime.value = state.clock.getElapsedTime();
-            // Decay Impulse
-            materialRef.current.uniforms.uImpulse.value.z *= 0.92;
+            materialRef.current.uTime = state.clock.getElapsedTime();
+            // Elastic/Exponential decay
+            materialRef.current.uStrength *= 0.94;
+            if (materialRef.current.uStrength < 0.001) materialRef.current.uStrength = 0;
         }
     });
 
-    const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
-        e.stopPropagation();
-        const uv = e.uv;
-        if (uv && materialRef.current) {
-            // Trigger Ripple
-            materialRef.current.uniforms.uImpulse.value.set(uv.x, uv.y, 1.0);
-
-            // Map UV to grid coords for game logic
-            const gx = Math.floor(uv.x * GRID_SIZE);
-            const gy = Math.floor((1.0 - uv.y) * GRID_SIZE);
-            onPointerDown?.(gx, gy);
-        }
-    };
-
     return (
-        <mesh
-            ref={meshRef}
-            position={[0, 0, -0.01]}
-            onPointerDown={handlePointerDown}
-        >
-            <planeGeometry args={[10, 10, 64, 64]} />
-            <shaderMaterial
+        <mesh position={[0, 0, -0.05]} rotation={[0, 0, 0]}>
+            <planeGeometry args={[10, 10, 128, 128]} />
+            <gridMaterial
                 ref={materialRef}
-                vertexShader={vertexShader}
-                fragmentShader={fragmentShader}
-                uniforms={uniforms}
+                key={GridMaterial.key}
+                uColor={new THREE.Color('#ffffff')}
                 transparent={false}
             />
         </mesh>
     );
-};
+});
