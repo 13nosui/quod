@@ -24,7 +24,7 @@ export const Grid = ({ smallBlocks, bigBlocks, onBlockClick }: GridProps) => {
         >
             {/* Small Blocks Layer (Grid) */}
             {smallBlocks.map((row, x) => (
-                row.map((block, y) => {
+                row.map((_block, y) => {
                     // x is column index?, y is row? 
                     // Note: In p5.js code logic `smallBlocks[x][y]` suggests x=col, y=row.
                     // But in standard 2D array map: map((row, r) => row.map((cell, c))).

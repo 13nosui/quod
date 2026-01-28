@@ -33,7 +33,6 @@ export const findOrtho = (grid: GridState, startX: number, startY: number, visit
     if (!block) return [];
 
     const group: Point[] = [];
-    const queue: Point[] = [{ x: startX, y: startY }];
 
     visited[startX][startY] = true;
     group.push({ x: startX, y: startY });
@@ -61,7 +60,6 @@ export const findDiag = (grid: GridState, startX: number, startY: number, visite
     if (!block) return [];
 
     const group: Point[] = [];
-    const queue: Point[] = [{ x: startX, y: startY }];
 
     visited[startX][startY] = true;
     group.push({ x: startX, y: startY });

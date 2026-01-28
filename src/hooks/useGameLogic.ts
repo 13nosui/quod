@@ -67,7 +67,7 @@ export const useGameLogic = () => {
             setSmallBlocks(tempGrid);
             await new Promise(r => setTimeout(r, 250));
 
-            const { newGrid: slidGrid, moved } = slideGrid(tempGrid, bigBlocks, dx, dy);
+            const { newGrid: slidGrid } = slideGrid(tempGrid, bigBlocks, dx, dy);
             setSmallBlocks(slidGrid);
             currentGrid = slidGrid;
             await new Promise(r => setTimeout(r, 150));
@@ -116,7 +116,6 @@ export const useGameLogic = () => {
             // p5.js logic: Try to find a config that doesn't instantly match
             let validConfig = false;
             let attempts = 0;
-            let finalColors: string[] = [];
 
             // Temporary grid to test matches
             const tempGrid = smallBlocks.map(row => [...row]);
