@@ -1,8 +1,7 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import type { Direction, GridState, BigBlock } from '../types/game';
-import { GameScene, type GameSceneHandle } from './3d/GameScene';
+import { GameScene } from './3d/GameScene';
 import { motion } from 'framer-motion';
-import { GRID_SIZE } from '../utils/gameUtils';
 
 interface GameContainerProps {
     smallBlocks: GridState;
@@ -23,26 +22,14 @@ export const GameContainer = ({
     gameOver,
     isProcessing
 }: GameContainerProps) => {
-    const sceneRef = useRef<GameSceneHandle>(null);
-
-    // Helper to map grid coords to world coords for ripple effect
-    // Grid matches Block3D mapping: worldX = (x/5)*10 - 4
-    const triggerRippleAt = useCallback((x: number, y: number, isBig: boolean = false) => {
-        const worldX = (x / GRID_SIZE) * 10 - 4 + (isBig ? 1 : 0);
-        const worldY = (1.0 - y / GRID_SIZE) * 10 - 6 - (isBig ? 1 : 0);
-        sceneRef.current?.triggerRipple(worldX, worldY);
-    }, []);
 
     const handleSlide = useCallback((dir: Direction) => {
         slide(dir);
-        // Trigger generic "shake" ripples at centers for slide feedback
-        triggerRippleAt(2, 2, false);
-    }, [slide, triggerRippleAt]);
+    }, [slide]);
 
     const handleBreak = useCallback((x: number, y: number) => {
         breakBlock(x, y);
-        triggerRippleAt(x, y, true);
-    }, [breakBlock, triggerRippleAt]);
+    }, [breakBlock]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -67,7 +54,6 @@ export const GameContainer = ({
             </div>
 
             <GameScene
-                ref={sceneRef}
                 smallBlocks={smallBlocks}
                 bigBlocks={bigBlocks}
                 onBlockClick={handleBreak}

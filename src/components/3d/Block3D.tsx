@@ -22,39 +22,38 @@ export const Block3D = ({ x, y, type, color, onClick }: Block3DProps) => {
 
     const springConfig = {
         type: "spring",
-        stiffness: 400,
+        stiffness: 450,
         damping: 25,
         mass: 1
     };
 
     return (
-        <motion.group
-            initial={{ scale: 0, opacity: 0 }}
+        <motion.mesh
+            initial={{ scale: 0 }}
             animate={{
                 scale: 1,
-                opacity: 1,
                 x: targetX,
                 y: targetY,
                 z: isBig ? 0.2 : 0.1
             }}
-            exit={{ scale: 0, opacity: 0 }}
+            exit={{ scale: 0 }}
+            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
             transition={springConfig}
             onPointerDown={(e: any) => {
                 e.stopPropagation();
                 onClick?.();
             }}
         >
-            <mesh>
-                <boxGeometry args={[size, size, isBig ? 0.4 : 0.2]} />
-                <meshStandardMaterial
-                    color={color}
-                    flatShading={true}
-                    roughness={0.8}
-                    metalness={0}
-                    transparent={false}
-                    opacity={1}
-                />
-            </mesh>
-        </motion.group>
+            <boxGeometry args={[size, size, isBig ? 0.4 : 0.2]} />
+            <meshStandardMaterial
+                color={color}
+                flatShading={true}
+                roughness={0.8}
+                metalness={0}
+                transparent={false}
+                opacity={1}
+            />
+        </motion.mesh>
     );
 };
