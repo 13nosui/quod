@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { PerspectiveCamera, Environment } from '@react-three/drei';
+import { PerspectiveCamera } from '@react-three/drei';
 import { ReactiveGrid } from './ReactiveGrid';
 import { Block3D } from './Block3D';
 import type { GridState, Point } from '../../types/game';
@@ -22,6 +22,16 @@ export const GameScene = ({ smallBlocks, nextSpawnPos, nextSpawnColors }: GameSc
                     fov={50}
                     onUpdate={(c) => c.lookAt(0, 0, 0)}
                 />
+
+                <ambientLight intensity={1.2} color="#ffffff" />
+                <directionalLight
+                    position={[5, 10, 5]}
+                    intensity={0.8}
+                    color="#ffffff"
+                    castShadow
+                    shadow-mapSize={[1024, 1024]}
+                />
+                <pointLight position={[-5, 5, -5]} intensity={0.4} color="#ffffff" />
 
                 <ReactiveGrid />
 
@@ -50,8 +60,6 @@ export const GameScene = ({ smallBlocks, nextSpawnPos, nextSpawnColors }: GameSc
                         </>
                     )}
                 </AnimatePresence>
-
-                <Environment preset="city" />
             </Canvas>
         </div>
     );
