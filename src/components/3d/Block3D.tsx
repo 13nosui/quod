@@ -55,14 +55,14 @@ export const Block3D = ({ x, y, color, isGhost = false }: Block3DProps) => {
                 color={color}
                 transparent={isGhost}
                 opacity={isGhost ? 0.3 : 1.0}
-                roughness={isGhost ? 0.5 : 0.1}
+                roughness={isGhost ? 0.5 : 0.8}
                 metalness={0.0}
                 transmission={isGhost ? 0.5 : 0.0}
                 ior={1.4}
                 thickness={isGhost ? 0.5 : 1.5}
                 attenuationColor={color}
                 attenuationDistance={1.0}
-                specularIntensity={isGhost ? 0.2 : 1.0}
+                specularIntensity={isGhost ? 0.2 : 0.0}
             />
         </motion.mesh>
     );
