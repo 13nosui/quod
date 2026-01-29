@@ -44,15 +44,6 @@ export const useGameLogic = () => {
         return newGrid;
     };
 
-    const spawnBonusAt = (grid: GridState, pos: Point, colors: string[]): GridState => {
-        const newGrid = grid.map(row => [...row]);
-        // Fixed diagonal pattern: Top-Left and Bottom-Right
-        newGrid[pos.x][pos.y] = createSmallBlock(colors[0]);
-        newGrid[pos.x + 1][pos.y + 1] = createSmallBlock(colors[1]);
-
-        return newGrid;
-    };
-
     const resetGame = useCallback(() => {
         const emptyGrid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
         const pos = findRandom2x2EmptyArea(emptyGrid);
@@ -81,11 +72,7 @@ export const useGameLogic = () => {
     const endTurn = async (gridAfterSlide: GridState, dx: number, dy: number) => {
         setIsProcessing(true);
 
-        // 1. Check for matches BEFORE spawning (Risk/Reward Bonus)
-        const preSpawnMatches = getAllMatches(gridAfterSlide);
-        const isBonusTurn = preSpawnMatches.length > 0;
-
-        // 2. Spawning 2x2 Cluster (or Bonus Spawn)
+        // 1. Spawning 2x2 Cluster
         let pos = nextSpawnPos;
 
         // If the pre-calculated position is now blocked, find a new one
@@ -99,10 +86,7 @@ export const useGameLogic = () => {
             return;
         }
 
-        // Reduced spawn if a match was made during the slide
-        const gridWithNewSpawn = isBonusTurn
-            ? spawnBonusAt(gridAfterSlide, pos, nextSpawnColors)
-            : spawn2x2At(gridAfterSlide, pos, nextSpawnColors);
+        const gridWithNewSpawn = spawn2x2At(gridAfterSlide, pos, nextSpawnColors);
 
         setSmallBlocks(gridWithNewSpawn);
         setNextSpawnColors(generateSpawnColors());
