@@ -30,6 +30,7 @@ function App() {
         slide={game.slide}
         score={game.score}
         highScore={game.highScore}
+        highScoreDate={game.highScoreDate}
         gameOver={game.gameOver}
         isProcessing={game.isProcessing}
         nextSpawnColors={game.nextSpawnColors}

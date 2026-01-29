@@ -8,6 +8,7 @@ interface GameContainerProps {
     slide: (direction: Direction) => void;
     score: number;
     highScore: number;
+    highScoreDate: string | null;
     gameOver: boolean;
     isProcessing: boolean;
     nextSpawnColors: string[];
@@ -21,6 +22,7 @@ export const GameContainer = ({
     slide,
     score,
     highScore,
+    highScoreDate,
     gameOver,
     isProcessing,
     nextSpawnColors,
@@ -138,8 +140,15 @@ export const GameContainer = ({
             <div className="flex flex-col items-center gap-1">
                 <div className="flex flex-col items-center">
                     <div className="text-[10px] font-mono uppercase tracking-[0.2em] opacity-30">Best Score</div>
-                    <div className="text-sm font-bungee opacity-30 mt-[-2px]">
-                        {highScore.toString().padStart(6, '0')}
+                    <div className="flex flex-col items-center gap-0.5">
+                        <div className="text-sm font-bungee opacity-30 mt-[-2px]">
+                            {highScore.toString().padStart(6, '0')}
+                        </div>
+                        {highScoreDate && (
+                            <div className="text-[9px] font-mono opacity-20 uppercase tracking-tighter">
+                                {new Date(highScoreDate).toLocaleDateString()}
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="text-xs font-mono uppercase tracking-widest opacity-30 mt-2">Current Score</div>

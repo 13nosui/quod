@@ -26,6 +26,7 @@ const generateSpawnColors = (): string[] => {
 
 const STORAGE_KEY = 'shards-game-state';
 const HIGHSCORE_KEY = 'shards-highscore';
+const HIGHSCORE_DATE_KEY = 'shards-highscore-date';
 
 export const useGameLogic = () => {
     const [smallBlocks, setSmallBlocks] = useState<GridState>(() =>
@@ -34,6 +35,7 @@ export const useGameLogic = () => {
 
     const [score, setScore] = useState(0);
     const [highScore, setHighScore] = useState(0);
+    const [highScoreDate, setHighScoreDate] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [gameOver, setGameOver] = useState(false);
     const [nextSpawnColors, setNextSpawnColors] = useState<string[]>([]);
@@ -82,6 +84,11 @@ export const useGameLogic = () => {
             setHighScore(parseInt(savedHighScore, 10));
         }
 
+        const savedHighScoreDate = localStorage.getItem(HIGHSCORE_DATE_KEY);
+        if (savedHighScoreDate) {
+            setHighScoreDate(savedHighScoreDate);
+        }
+
         // Load Game State
         const savedState = localStorage.getItem(STORAGE_KEY);
         if (savedState) {
@@ -123,8 +130,11 @@ export const useGameLogic = () => {
     // Update High Score
     useEffect(() => {
         if (score > highScore) {
+            const now = new Date().toISOString();
             setHighScore(score);
+            setHighScoreDate(now);
             localStorage.setItem(HIGHSCORE_KEY, score.toString());
+            localStorage.setItem(HIGHSCORE_DATE_KEY, now);
         }
     }, [score, highScore]);
 
@@ -232,5 +242,5 @@ export const useGameLogic = () => {
         }
     }, [smallBlocks, isProcessing, gameOver]);
 
-    return { smallBlocks, slide, score, highScore, gameOver, isProcessing, resetGame, nextSpawnColors, nextSpawnPos, bumpEvent, comboCount };
+    return { smallBlocks, slide, score, highScore, highScoreDate, gameOver, isProcessing, resetGame, nextSpawnColors, nextSpawnPos, bumpEvent, comboCount };
 };
