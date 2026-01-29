@@ -46,17 +46,9 @@ export const useGameLogic = () => {
 
     const spawnBonusAt = (grid: GridState, pos: Point, colors: string[]): GridState => {
         const newGrid = grid.map(row => [...row]);
-        const spots = [
-            { x: pos.x, y: pos.y },
-            { x: pos.x + 1, y: pos.y },
-            { x: pos.x, y: pos.y + 1 },
-            { x: pos.x + 1, y: pos.y + 1 }
-        ];
-        // Shuffle and pick 2 random spots within the 2x2 area
-        const selectedSpots = spots.sort(() => Math.random() - 0.5).slice(0, 2);
-
-        newGrid[selectedSpots[0].x][selectedSpots[0].y] = createSmallBlock(colors[0]);
-        newGrid[selectedSpots[1].x][selectedSpots[1].y] = createSmallBlock(colors[1]);
+        // Fixed diagonal pattern: Top-Left and Bottom-Right
+        newGrid[pos.x][pos.y] = createSmallBlock(colors[0]);
+        newGrid[pos.x + 1][pos.y + 1] = createSmallBlock(colors[1]);
 
         return newGrid;
     };

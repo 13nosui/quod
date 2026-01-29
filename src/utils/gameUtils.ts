@@ -19,57 +19,33 @@ export const createSmallBlock = (color?: string): SmallBlock => ({
 
 const isValid = (x: number, y: number) => x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE;
 
-// 縦横（4方向）探索
-export const findOrtho = (grid: GridState, startX: number, startY: number, visited: boolean[][]): Point[] => {
-    const block = grid[startX][startY];
-    if (!block) return [];
+// 縦横（4方向）探索 (Recursive DFS)
+export const findOrtho = (grid: GridState, x: number, y: number, visited: boolean[][], color: string): Point[] => {
+    if (!isValid(x, y) || visited[x][y] || grid[x][y]?.color !== color) return [];
 
-    const group: Point[] = [];
-
-    visited[startX][startY] = true;
-    group.push({ x: startX, y: startY });
+    visited[x][y] = true;
+    const group: Point[] = [{ x, y }];
 
     const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
-
-    let head = 0;
-    while (head < group.length) {
-        const curr = group[head++];
-        for (const [dx, dy] of directions) {
-            const nx = curr.x + dx;
-            const ny = curr.y + dy;
-            if (isValid(nx, ny) && !visited[nx][ny] && grid[nx][ny]?.color === block.color) {
-                visited[nx][ny] = true;
-                group.push({ x: nx, y: ny });
-            }
-        }
+    for (const [dx, dy] of directions) {
+        group.push(...findOrtho(grid, x + dx, y + dy, visited, color));
     }
+
     return group;
 };
 
-// 斜め（4方向）探索
-export const findDiag = (grid: GridState, startX: number, startY: number, visited: boolean[][]): Point[] => {
-    const block = grid[startX][startY];
-    if (!block) return [];
+// 斜め（4方向）探索 (Recursive DFS)
+export const findDiag = (grid: GridState, x: number, y: number, visited: boolean[][], color: string): Point[] => {
+    if (!isValid(x, y) || visited[x][y] || grid[x][y]?.color !== color) return [];
 
-    const group: Point[] = [];
-
-    visited[startX][startY] = true;
-    group.push({ x: startX, y: startY });
+    visited[x][y] = true;
+    const group: Point[] = [{ x, y }];
 
     const directions = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
-
-    let head = 0;
-    while (head < group.length) {
-        const curr = group[head++];
-        for (const [dx, dy] of directions) {
-            const nx = curr.x + dx;
-            const ny = curr.y + dy;
-            if (isValid(nx, ny) && !visited[nx][ny] && grid[nx][ny]?.color === block.color) {
-                visited[nx][ny] = true;
-                group.push({ x: nx, y: ny });
-            }
-        }
+    for (const [dx, dy] of directions) {
+        group.push(...findDiag(grid, x + dx, y + dy, visited, color));
     }
+
     return group;
 };
 
@@ -78,11 +54,11 @@ export const getAllMatches = (grid: GridState): Point[] => {
     const toRemove: Point[] = [];
 
     // 1. 縦横チェック
-    let visitedOrtho = Array(GRID_SIZE).fill(false).map(() => Array(GRID_SIZE).fill(false));
+    let visitedOrtho = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(false));
     for (let x = 0; x < GRID_SIZE; x++) {
         for (let y = 0; y < GRID_SIZE; y++) {
             if (grid[x][y] && !visitedOrtho[x][y]) {
-                const group = findOrtho(grid, x, y, visitedOrtho);
+                const group = findOrtho(grid, x, y, visitedOrtho, grid[x][y]!.color);
                 if (group.length >= 3) {
                     toRemove.push(...group);
                 }
@@ -91,11 +67,11 @@ export const getAllMatches = (grid: GridState): Point[] => {
     }
 
     // 2. 斜めチェック
-    let visitedDiag = Array(GRID_SIZE).fill(false).map(() => Array(GRID_SIZE).fill(false));
+    let visitedDiag = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(false));
     for (let x = 0; x < GRID_SIZE; x++) {
         for (let y = 0; y < GRID_SIZE; y++) {
             if (grid[x][y] && !visitedDiag[x][y]) {
-                const group = findDiag(grid, x, y, visitedDiag);
+                const group = findDiag(grid, x, y, visitedDiag, grid[x][y]!.color);
                 if (group.length >= 3) {
                     toRemove.push(...group);
                 }
@@ -112,15 +88,16 @@ export const getAllMatches = (grid: GridState): Point[] => {
 // 特定セルがマッチに含まれているか
 export const isPartOfAnyMatch = (grid: GridState, x: number, y: number): boolean => {
     if (!grid[x][y]) return false;
+    const color = grid[x][y]!.color;
 
     // Ortho
-    const visitedOrtho = Array(GRID_SIZE).fill(false).map(() => Array(GRID_SIZE).fill(false));
-    const orthoGroup = findOrtho(grid, x, y, visitedOrtho);
+    const visitedOrtho = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(false));
+    const orthoGroup = findOrtho(grid, x, y, visitedOrtho, color);
     if (orthoGroup.length >= 3) return true;
 
     // Diag
-    const visitedDiag = Array(GRID_SIZE).fill(false).map(() => Array(GRID_SIZE).fill(false));
-    const diagGroup = findDiag(grid, x, y, visitedDiag);
+    const visitedDiag = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(false));
+    const diagGroup = findDiag(grid, x, y, visitedDiag, color);
     if (diagGroup.length >= 3) return true;
 
     return false;
