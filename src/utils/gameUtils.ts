@@ -34,44 +34,16 @@ export const findOrtho = (grid: GridState, x: number, y: number, visited: boolea
     return group;
 };
 
-// 斜め（4方向）探索 (Recursive DFS)
-export const findDiag = (grid: GridState, x: number, y: number, visited: boolean[][], color: string): Point[] => {
-    if (!isValid(x, y) || visited[x][y] || grid[x][y]?.color !== color) return [];
-
-    visited[x][y] = true;
-    const group: Point[] = [{ x, y }];
-
-    const directions = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
-    for (const [dx, dy] of directions) {
-        group.push(...findDiag(grid, x + dx, y + dy, visited, color));
-    }
-
-    return group;
-};
-
 // 全マッチ取得
 export const getAllMatches = (grid: GridState): Point[] => {
     const toRemove: Point[] = [];
 
-    // 1. 縦横チェック
+    // 縦横チェック
     let visitedOrtho = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(false));
     for (let x = 0; x < GRID_SIZE; x++) {
         for (let y = 0; y < GRID_SIZE; y++) {
             if (grid[x][y] && !visitedOrtho[x][y]) {
                 const group = findOrtho(grid, x, y, visitedOrtho, grid[x][y]!.color);
-                if (group.length >= 3) {
-                    toRemove.push(...group);
-                }
-            }
-        }
-    }
-
-    // 2. 斜めチェック
-    let visitedDiag = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(false));
-    for (let x = 0; x < GRID_SIZE; x++) {
-        for (let y = 0; y < GRID_SIZE; y++) {
-            if (grid[x][y] && !visitedDiag[x][y]) {
-                const group = findDiag(grid, x, y, visitedDiag, grid[x][y]!.color);
                 if (group.length >= 3) {
                     toRemove.push(...group);
                 }
@@ -90,17 +62,9 @@ export const isPartOfAnyMatch = (grid: GridState, x: number, y: number): boolean
     if (!grid[x][y]) return false;
     const color = grid[x][y]!.color;
 
-    // Ortho
     const visitedOrtho = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(false));
     const orthoGroup = findOrtho(grid, x, y, visitedOrtho, color);
-    if (orthoGroup.length >= 3) return true;
-
-    // Diag
-    const visitedDiag = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(false));
-    const diagGroup = findDiag(grid, x, y, visitedDiag, color);
-    if (diagGroup.length >= 3) return true;
-
-    return false;
+    return orthoGroup.length >= 3;
 };
 
 export const is2x2AreaEmpty = (grid: GridState, x: number, y: number): boolean => {
@@ -191,8 +155,7 @@ export const hasPossibleMatches = (grid: GridState): boolean => {
             if (!current) continue;
 
             const neighbors = [
-                [0, 1], [0, -1], [1, 0], [-1, 0], // Ortho
-                [1, 1], [1, -1], [-1, 1], [-1, -1] // Diag
+                [0, 1], [0, -1], [1, 0], [-1, 0] // Ortho Only
             ];
 
             for (const [nx, ny] of neighbors) {

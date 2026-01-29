@@ -147,7 +147,7 @@ export const GameContainer = ({
 
             <div className="text-[10px] font-mono opacity-30 text-center uppercase tracking-widest">
                 ARROWS or SWIPE TO SLIDE<br />
-                MATCH 3+ COLORS (ORTHO or DIAG)
+                MATCH 3+ COLORS (ORTHO ONLY)
             </div>
         </div>
     );
