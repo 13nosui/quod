@@ -40,7 +40,7 @@ interface GameSceneProps {
     bumpEvent: { x: number; y: number; id: number } | null;
 }
 
-export const GameScene = ({ smallBlocks, nextSpawnPos, nextSpawnColors, bumpEvent }: GameSceneProps) => {
+export const GameScene = ({ smallBlocks, bumpEvent }: GameSceneProps) => {
     return (
         <div style={{
             width: '100%',
