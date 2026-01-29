@@ -5,7 +5,7 @@ import { ReactiveGrid } from './ReactiveGrid';
 import { Block3D } from './Block3D';
 import type { GridState, Point } from '../../types/game';
 import { GRID_SIZE } from '../../utils/gameUtils';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 
 const CameraController = () => {
     const { camera, size } = useThree();
@@ -38,41 +38,16 @@ interface GameSceneProps {
     nextSpawnPos: Point | null;
     nextSpawnColors: string[];
     bumpEvent: { x: number; y: number; id: number } | null;
-    gameOver: boolean;
 }
 
-export const GameScene = ({ smallBlocks, nextSpawnPos, nextSpawnColors, bumpEvent, gameOver }: GameSceneProps) => {
-
-    const wobbleVariants = {
-        gameOver: {
-            x: [0, -5, 5, -3, 3, -1, 1, 0],
-            y: [0, -2, 2, -1, 1, 0],
-            transition: {
-                duration: 0.5,
-                repeat: Infinity,
-                repeatType: "mirror" as const,
-                ease: "easeInOut",
-            }
-        },
-        playing: {
-            x: 0,
-            y: 0,
-            transition: { duration: 0.2 }
-        }
-    };
-
+export const GameScene = ({ smallBlocks, nextSpawnPos, nextSpawnColors, bumpEvent }: GameSceneProps) => {
     return (
-        <motion.div
-            style={{
-                width: '100%',
-                maxHeight: '70vh',
-                aspectRatio: '1/1',
-                position: 'relative',
-                margin: '0 auto'
-            }}
-            variants={wobbleVariants}
-            animate={gameOver ? "gameOver" : "playing"}
-        >
+        <div style={{
+            width: '100%',
+            aspectRatio: '1/1',
+            position: 'relative',
+            margin: '0 auto'
+        }}>
             <Canvas shadows dpr={[1, 2]} gl={{ antialias: false }}>
                 <PerspectiveCamera
                     makeDefault
@@ -123,6 +98,6 @@ export const GameScene = ({ smallBlocks, nextSpawnPos, nextSpawnColors, bumpEven
                     )}
                 </AnimatePresence>
             </Canvas>
-        </motion.div>
+        </div>
     );
 };

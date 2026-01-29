@@ -135,7 +135,6 @@ export const GameContainer = ({
                 nextSpawnPos={nextSpawnPos}
                 nextSpawnColors={nextSpawnColors}
                 bumpEvent={bumpEvent}
-                gameOver={gameOver}
             />
 
             <div className="flex flex-col items-center gap-1">
