@@ -1,6 +1,6 @@
 import type { GridState, Point, SmallBlock } from '../types/game';
 
-export const GRID_SIZE = 5;
+export const GRID_SIZE = 6;
 
 // Radix UI Step 10 colors (Lighter/Brighter)
 export const COLORS = [
