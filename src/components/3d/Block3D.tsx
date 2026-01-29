@@ -72,18 +72,14 @@ export const Block3D = ({ x, y, color, isGhost = false, bumpEvent }: Block3DProp
             }}
         >
             <boxGeometry args={[size, size, size]} />
-            <meshPhysicalMaterial
+            <meshStandardMaterial
                 color={color}
+                emissive={color}
+                emissiveIntensity={0.4}
+                roughness={0.3}
+                metalness={0.1}
                 transparent={true}
-                opacity={isGhost ? 0.3 : 1}
-                roughness={isGhost ? 0.4 : 0.1}
-                metalness={0.0}
-                transmission={isGhost ? 0.4 : 0.95}
-                ior={1.7}
-                thickness={0.8}
-                envMapIntensity={2.0}
-                clearcoat={isGhost ? 0 : 1.0}
-                clearcoatRoughness={0.05}
+                opacity={isGhost ? 0.5 : 1}
             />
         </motion.mesh>
     );
