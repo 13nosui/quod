@@ -18,7 +18,7 @@ export const GameScene = ({ smallBlocks, nextSpawnPos, nextSpawnColors, bumpEven
             <Canvas shadows dpr={[1, 2]}>
                 <PerspectiveCamera
                     makeDefault
-                    position={[0, 8.5, 0]}
+                    position={[0, 12, 0]}
                     up={[0, 0, -1]}
                     fov={50}
                     onUpdate={(c) => c.lookAt(0, 0, 0)}
