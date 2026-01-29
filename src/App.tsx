@@ -33,13 +33,13 @@ function App() {
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center gap-8"
             >
-              <h2 className="text-4xl md:text-5xl font-mono font-bold tracking-[0.3em] text-black uppercase text-center">
+              <h2 className="text-4xl md:text-5xl font-bungee tracking-[0.1em] text-black uppercase text-center">
                 Game Over
               </h2>
 
               <div className="flex flex-col items-center gap-2">
                 <div className="text-xs font-mono text-black/40 uppercase tracking-widest">Final Score</div>
-                <div className="text-4xl font-mono text-black font-light">
+                <div className="text-4xl font-bungee text-black">
                   {game.score.toString().padStart(6, '0')}
                 </div>
               </div>

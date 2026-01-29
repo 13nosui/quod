@@ -103,7 +103,7 @@ export const GameContainer = ({
             </AnimatePresence>
 
             <div className="flex flex-col items-center gap-2">
-                <h1 className="text-4xl font-mono font-bold tracking-[0.2em] uppercase">SHARDS</h1>
+                <h1 className="text-4xl font-bungee tracking-[0.1em] uppercase">SHARDS</h1>
                 <div className="text-xs font-mono opacity-50 uppercase tracking-widest">
                     {gameOver ? "GAME OVER" : isProcessing ? "SWEEPING..." : "READY"}
                 </div>
@@ -139,7 +139,7 @@ export const GameContainer = ({
                     key={score}
                     initial={{ y: -5, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="text-3xl font-mono font-light"
+                    className="text-3xl font-bungee"
                 >
                     {score.toString().padStart(6, '0')}
                 </motion.div>
