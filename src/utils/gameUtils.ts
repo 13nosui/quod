@@ -2,12 +2,12 @@ import type { GridState, Point, SmallBlock } from '../types/game';
 
 export const GRID_SIZE = 5;
 
-// Radix UI Step 9 (Solid Background) colors
+// Radix UI Step 10 colors (Lighter/Brighter)
 export const COLORS = [
-    '#E54D2E', // Ruby 9 (Red)
-    '#3E63DD', // Indigo 9 (Blue)
-    '#FFC53D', // Amber 9 (Yellow)
-    '#46A758'  // Grass 9 (Green)
+    '#F3594F', // Ruby 10 (Red)
+    '#5C73E7', // Indigo 10 (Blue)
+    '#FFD60A', // Amber 10 (Yellow)
+    '#5BB96A'  // Grass 10 (Green)
 ];
 
 export const createSmallBlock = (color?: string): SmallBlock => ({
