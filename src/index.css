@@ -1,8 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-mono: "JetBrains Mono", "Roboto Mono", monospace;
-  --font-sans: "Inter", "Outfit", system-ui, sans-serif;
+  --font-sans: "Hind", sans-serif;
 
   --color-brand-primary: #000000;
   --color-brand-secondary: #ffffff;
