@@ -221,8 +221,12 @@ export const useGameLogic = () => {
 
         // Final check for 2x2 space after all matches and falls
         const futurePos = findRandom2x2EmptyArea(currentGrid);
+
         if (!futurePos) {
-            setGameOver(true);
+            // Only trigger Game Over if we can't spawn AND can't move
+            if (!hasPossibleMoves(currentGrid)) {
+                setGameOver(true);
+            }
         }
         setNextSpawnPos(futurePos);
 
