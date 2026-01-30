@@ -8,7 +8,7 @@ import {
     slideGrid,
     findRandom2x2EmptyArea,
     is2x2AreaEmpty,
-    hasPossibleMoves
+    canClearSpaceForSpawn
 } from '../utils/gameUtils';
 import { playSound } from '../utils/sounds';
 
@@ -53,27 +53,30 @@ export const useGameLogic = () => {
         return newGrid;
     };
 
-    const resetGame = useCallback(() => {
+    const resetGame = useCallback(async () => {
         const emptyGrid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
         const pos = findRandom2x2EmptyArea(emptyGrid);
 
         const initialColors = generateSpawnColors();
         const nextBatch = generateSpawnColors();
 
+        let initialGrid = emptyGrid;
         if (pos) {
-            setSmallBlocks(spawn2x2At(emptyGrid, pos, initialColors));
-        } else {
-            setSmallBlocks(emptyGrid);
+            initialGrid = spawn2x2At(emptyGrid, pos, initialColors);
         }
 
+        setSmallBlocks(initialGrid);
         setNextSpawnColors(nextBatch);
-        setNextSpawnPos(findRandom2x2EmptyArea(pos ? spawn2x2At(emptyGrid, pos, initialColors) : emptyGrid));
+
+        // Initial match check
+        const { finalGrid } = await processMatches(initialGrid);
+
+        setNextSpawnPos(findRandom2x2EmptyArea(finalGrid));
         setScore(0);
         setComboCount(0);
         setGameOver(false);
         setIsProcessing(false);
 
-        // Clear saved game state but keep high score
         localStorage.removeItem(STORAGE_KEY);
     }, []);
 
@@ -139,59 +142,23 @@ export const useGameLogic = () => {
         }
     }, [score, highScore]);
 
-    // Turn end check: Spawning 2x2 and matching
-    const endTurn = async (gridAfterSlide: GridState, dx: number, dy: number) => {
-        setIsProcessing(true);
-
-        // 1. Spawning 2x2 Cluster
-        let pos = nextSpawnPos;
-
-        // If the pre-calculated position is now blocked, find a new one
-        if (!pos || !is2x2AreaEmpty(gridAfterSlide, pos.x, pos.y)) {
-            pos = findRandom2x2EmptyArea(gridAfterSlide);
-        }
-
-        let currentGrid = gridAfterSlide;
-
-        if (pos) {
-            // Normal spawn
-            const gridWithNewSpawn = spawn2x2At(gridAfterSlide, pos, nextSpawnColors);
-            setSmallBlocks(gridWithNewSpawn);
-            setNextSpawnColors(generateSpawnColors());
-            currentGrid = gridWithNewSpawn;
-        } else {
-            // Spawn blocked: Check if we are truly stuck
-            if (!hasPossibleMoves(gridAfterSlide)) {
-                setGameOver(true);
-                setIsProcessing(false);
-                return;
-            }
-            // If moves are possible, skip spawn but continue game logic
-            setSmallBlocks(gridAfterSlide);
-            currentGrid = gridAfterSlide;
-        }
-
-        // Wait for potential spawn animation
-        await new Promise(r => setTimeout(r, 200));
-
-        // 2. Chain Reaction Matches
+    // Helper to process matches and gravity (returns the final grid state)
+    const processMatches = async (startGrid: GridState, dx: number = 0, dy: number = 1): Promise<{ finalGrid: GridState, totalMatches: boolean }> => {
+        let currentGrid = startGrid;
         let loop = true;
         let currentTurnMatches = false;
         let activeCombo = comboCount;
 
         while (loop) {
             const matches = getAllMatches(currentGrid);
-            if (matches.length === 0) {
-                loop = false;
-                break;
-            }
+            if (matches.length === 0) break;
 
             currentTurnMatches = true;
             activeCombo++;
 
             playSound('match');
             const baseScore = matches.length * 100;
-            const bonus = activeCombo * 50; // 50 points per combo level
+            const bonus = activeCombo * 50;
             setScore(s => s + baseScore + bonus);
 
             const tempGrid = currentGrid.map(row => [...row]);
@@ -199,9 +166,9 @@ export const useGameLogic = () => {
             setSmallBlocks(tempGrid);
             await new Promise(r => setTimeout(r, 250));
 
+            // Gravity in the direction of the last slide
             const { newGrid: slidGrid } = slideGrid(tempGrid, dx, dy);
 
-            // If sliding after matches actually moves things, update state and wait
             if (JSON.stringify(slidGrid) !== JSON.stringify(tempGrid)) {
                 setSmallBlocks(slidGrid);
                 currentGrid = slidGrid;
@@ -212,29 +179,18 @@ export const useGameLogic = () => {
             }
         }
 
-        // 3. Resolve Combo State
         if (currentTurnMatches) {
             setComboCount(activeCombo);
         } else {
             setComboCount(0);
         }
 
-        // Final check for 2x2 space after all matches and falls
-        const futurePos = findRandom2x2EmptyArea(currentGrid);
-
-        if (!futurePos) {
-            // Only trigger Game Over if we can't spawn AND can't move
-            if (!hasPossibleMoves(currentGrid)) {
-                setGameOver(true);
-            }
-        }
-        setNextSpawnPos(futurePos);
-
-        setIsProcessing(false);
+        return { finalGrid: currentGrid, totalMatches: currentTurnMatches };
     };
 
-    const slide = useCallback((direction: Direction) => {
+    const slide = useCallback(async (direction: Direction) => {
         if (isProcessing || gameOver) return;
+        setIsProcessing(true);
 
         let dx = 0, dy = 0;
         if (direction === 'LEFT') dx = -1;
@@ -242,18 +198,59 @@ export const useGameLogic = () => {
         if (direction === 'UP') dy = -1;
         if (direction === 'DOWN') dy = 1;
 
+        // --- PHASE 1: SLIDE ---
         const { newGrid, moved } = slideGrid(smallBlocks, dx, dy);
-
-        if (moved) {
-            playSound('slide');
-            setSmallBlocks(newGrid);
-            // We moved, so we trigger the end-turn sequence (2x2 Spawn + Match)
-            endTurn(newGrid, dx, dy);
-        } else {
-            // "Jelly" recoil feedback for blocked move
+        if (!moved) {
             setBumpEvent({ x: dx, y: dy, id: Date.now() });
+            setIsProcessing(false);
+            return;
         }
-    }, [smallBlocks, isProcessing, gameOver]);
+
+        playSound('slide');
+        setSmallBlocks(newGrid);
+        await new Promise(r => setTimeout(r, 150));
+
+        // --- PHASE 2: MATCH (After Slide) ---
+        let { finalGrid: gridAfterSlideMatches } = await processMatches(newGrid, dx, dy);
+
+        // --- PHASE 3: SPAWN ---
+        let pos = nextSpawnPos;
+        // If no pre-calculated spawn (e.g., during "one chance" state), try to find one now
+        if (!pos || !is2x2AreaEmpty(gridAfterSlideMatches, pos.x, pos.y)) {
+            pos = findRandom2x2EmptyArea(gridAfterSlideMatches);
+        }
+
+        let gridAfterSpawn = gridAfterSlideMatches;
+        if (pos) {
+            gridAfterSpawn = spawn2x2At(gridAfterSlideMatches, pos, nextSpawnColors);
+            setSmallBlocks(gridAfterSpawn);
+            setNextSpawnColors(generateSpawnColors());
+            await new Promise(r => setTimeout(r, 200));
+
+            // --- PHASE 4: MATCH (After Spawn) ---
+            const result = await processMatches(gridAfterSpawn, 0, 1);
+            gridAfterSpawn = result.finalGrid;
+        } else {
+            // Spawn Failed -> GAME OVER
+            // The player used their slide but failed to create space.
+            setGameOver(true);
+            setIsProcessing(false);
+            return;
+        }
+
+        // --- PHASE 5: GAME OVER CHECK ---
+        const futurePos = findRandom2x2EmptyArea(gridAfterSpawn);
+
+        if (!futurePos) {
+            // Board full. Can we survive by moving?
+            if (!canClearSpaceForSpawn(gridAfterSpawn)) {
+                setGameOver(true);
+            }
+        }
+
+        setNextSpawnPos(futurePos);
+        setIsProcessing(false);
+    }, [smallBlocks, isProcessing, gameOver, nextSpawnPos, nextSpawnColors, comboCount]);
 
     return { smallBlocks, slide, score, highScore, highScoreDate, gameOver, isProcessing, resetGame, nextSpawnColors, nextSpawnPos, bumpEvent, comboCount };
 };
