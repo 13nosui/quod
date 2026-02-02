@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react'; // useStateを追加
 import { Canvas, useThree } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import { ReactiveGrid } from './ReactiveGrid';
@@ -44,6 +44,32 @@ export const GameScene = ({ smallBlocks, bumpEvent }: GameSceneProps) => {
         col.map((block, y) => block ? { ...block, x, y } : null)
     ).filter((b): b is NonNullable<typeof b> => b !== null);
 
+    // --- アイドルアニメーション制御 ---
+    const [idleBlockId, setIdleBlockId] = useState<number | null>(null);
+    const [idleType, setIdleType] = useState<'sleep' | 'yawn'>('sleep');
+
+    useEffect(() => {
+        // 盤面が変化した(ユーザーが操作した)ら、アイドル状態をリセット
+        setIdleBlockId(null);
+
+        // 3秒後にアイドルイベントを発火
+        const timer = setTimeout(() => {
+            if (activeBlocks.length > 0) {
+                // ランダムなブロックを1つ選ぶ
+                const randomBlock = activeBlocks[Math.floor(Math.random() * activeBlocks.length)];
+
+                // 70%で睡眠、30%であくび
+                const type = Math.random() > 0.3 ? 'sleep' : 'yawn';
+
+                setIdleBlockId(randomBlock.id);
+                setIdleType(type);
+            }
+        }, 3000);
+
+        return () => clearTimeout(timer);
+    }, [smallBlocks]); // smallBlocksが変化するたびにタイマーリセット
+    // -----------------------------
+
     return (
         <div style={{
             width: '100%',
@@ -52,14 +78,6 @@ export const GameScene = ({ smallBlocks, bumpEvent }: GameSceneProps) => {
             position: 'relative',
             margin: '0 auto'
         }}>
-            {/* 最適化設定:
-                - shadows: 削除（影計算無効化）
-                - dpr: [1, 1] に固定（高DPI無視で負荷軽減）
-                - antialias: false (アンチエイリアス無効化)
-                - stencil: false (ステンシルバッファ無効化)
-                - depth: true (深度バッファは必要)
-                - powerPreference: "high-performance" (GPU優先)
-            */}
             <Canvas
                 dpr={[1, 1]}
                 gl={{
@@ -77,7 +95,6 @@ export const GameScene = ({ smallBlocks, bumpEvent }: GameSceneProps) => {
                 <ResponsiveCamera />
 
                 <ambientLight intensity={1.5} color="#ffffff" />
-                {/* 影(castShadow)設定を削除 */}
                 <directionalLight
                     position={[10, 20, 10]}
                     intensity={1.0}
@@ -96,6 +113,8 @@ export const GameScene = ({ smallBlocks, bumpEvent }: GameSceneProps) => {
                             type="small"
                             color={block.color}
                             bumpEvent={bumpEvent}
+                            // アイドル対象のブロックなら表情を変える
+                            expression={block.id === idleBlockId ? idleType : 'normal'}
                         />
                     ))}
                 </AnimatePresence>

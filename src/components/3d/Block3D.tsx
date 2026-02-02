@@ -10,9 +10,10 @@ interface Block3DProps {
     color: string;
     isGhost?: boolean;
     bumpEvent?: { x: number; y: number; id: number } | null;
+    expression?: 'normal' | 'sleep' | 'yawn'; // 追加
 }
 
-export const Block3D = ({ x, y, color, isGhost = false, bumpEvent }: Block3DProps) => {
+export const Block3D = ({ x, y, color, isGhost = false, bumpEvent, expression = 'normal' }: Block3DProps) => {
     const [bumpOffset, setBumpOffset] = useState({ x: 0, z: 0 });
 
     useEffect(() => {
@@ -39,16 +40,39 @@ export const Block3D = ({ x, y, color, isGhost = false, bumpEvent }: Block3DProp
         return { stiffness: 120, damping: 10, mass: 1 };
     }, [isGhost]);
 
+    // アニメーションの定義
+    let animateProps: any = {
+        scale: isGhost ? 0.95 : 1,
+        opacity: isGhost ? 0.4 : 1,
+        x: targetX + bumpOffset.x,
+        y: size / 2,
+        z: targetZ + bumpOffset.z
+    };
+
+    // 寝ているときは呼吸アニメーション（Y軸スケールをゆっくり伸縮）
+    // animatePropsの一部として上書きする
+    if (!isGhost && expression === 'sleep') {
+        animateProps = {
+            ...animateProps,
+            scaleY: [1, 1.05, 1], // 1 -> 1.05 -> 1 と伸縮
+            transition: {
+                ...springConfig,
+                scaleY: {
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                }
+            }
+        };
+    } else {
+        // 通常時
+        animateProps.scaleY = 1;
+    }
+
     return (
         <motion.mesh
             initial={{ scale: 0, x: targetX, y: size / 2, z: targetZ }}
-            animate={{
-                scale: isGhost ? 0.95 : 1,
-                opacity: isGhost ? 0.4 : 1,
-                x: targetX + bumpOffset.x,
-                y: size / 2,
-                z: targetZ + bumpOffset.z
-            }}
+            animate={animateProps}
             exit={{ scale: 0 }}
             transition={{
                 duration: 0.3,
@@ -66,8 +90,7 @@ export const Block3D = ({ x, y, color, isGhost = false, bumpEvent }: Block3DProp
                 opacity={isGhost ? 0.5 : 1}
             />
 
-            {/* 修正: colorプロパティをFaceに渡す */}
-            {!isGhost && <Face color={color} />}
+            {!isGhost && <Face color={color} expression={expression} />}
 
         </motion.mesh>
     );
