@@ -1,15 +1,38 @@
 import { motion } from 'framer-motion';
-// RecordsModalのインポートを削除
+import { Volume2, VolumeX, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { useBGM } from '../hooks/useBGM';
 
 interface HomeScreenProps {
     onStart: () => void;
     bestScore: number;
-    // records: GameRecord[]; // 不要になったので削除
 }
 
 export const HomeScreen = ({ onStart, bestScore }: HomeScreenProps) => {
+    const { theme, toggleTheme } = useTheme();
+    const { isPlaying, toggleBGM } = useBGM('/sounds/bgm.mp3');
+
     return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-12 z-10">
+        <div className="flex flex-col items-center justify-center w-full h-full min-h-[60vh] gap-12 z-10 relative">
+
+            {/* Control Buttons */}
+            <div className="absolute top-4 right-4 flex gap-4">
+                <button
+                    onClick={toggleBGM}
+                    className="p-3 bg-[var(--gray-3)] rounded-full hover:bg-[var(--gray-4)] transition-colors text-[var(--gray-12)]"
+                    aria-label="Toggle BGM"
+                >
+                    {isPlaying ? <Volume2 size={24} /> : <VolumeX size={24} />}
+                </button>
+                <button
+                    onClick={toggleTheme}
+                    className="p-3 bg-[var(--gray-3)] rounded-full hover:bg-[var(--gray-4)] transition-colors text-[var(--gray-12)]"
+                    aria-label="Toggle Theme"
+                >
+                    {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
+                </button>
+            </div>
+
             <div className="flex flex-col items-center gap-4">
                 <motion.h1
                     initial={{ scale: 0.9, opacity: 0 }}
@@ -38,7 +61,6 @@ export const HomeScreen = ({ onStart, bestScore }: HomeScreenProps) => {
                 PLAY
             </motion.button>
 
-            {/* シンプルなベストスコア表示のみ維持 */}
             {bestScore > 0 && (
                 <motion.div
                     initial={{ opacity: 0 }}
