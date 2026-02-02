@@ -88,5 +88,5 @@ export const useBGM = (url: string) => {
         }
     }, [isPlaying, play, stop]);
 
-    return { isPlaying, toggleBGM };
+    return { isPlaying, toggleBGM, play, stop };
 };

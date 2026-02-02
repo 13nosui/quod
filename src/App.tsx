@@ -1,21 +1,19 @@
 import { useEffect, useState } from 'react';
 import { GameContainer } from './components/GameContainer';
-import { HomeScreen } from './components/HomeScreen'; // 追加
+import { HomeScreen } from './components/HomeScreen';
 import { ThemeProvider } from './context/ThemeContext';
 import { initializeAdMob, showBanner } from './utils/admob';
+import { useBGM } from './hooks/useBGM'; // 追加
 import './index.css';
 
 function App() {
-  // Capacitor環境（スマホアプリ）かどうかを判定するステート
   const [isNative, setIsNative] = useState(false);
-
-  // 画面遷移を管理するステート: 'home' または 'game'
   const [screen, setScreen] = useState<'home' | 'game'>('home');
-
-  // ベストスコアを管理するステート
   const [highScore, setHighScore] = useState(0);
 
-  // ベストスコアの読み込み
+  // BGM管理をAppで行う
+  const { isPlaying, toggleBGM, play, stop } = useBGM('/sounds/bgm.mp3');
+
   useEffect(() => {
     const loadHighScore = () => {
       try {
@@ -30,16 +28,13 @@ function App() {
         console.error('Failed to load records:', e);
       }
     };
-
-    // アプリ起動時と、ホームに戻ってきたときにスコアを最新にする
     loadHighScore();
   }, [screen]);
 
   useEffect(() => {
     const initAds = async () => {
-      // window.Capacitor が存在するか確認
       if (window.Capacitor) {
-        setIsNative(true); // ネイティブ環境と判定
+        setIsNative(true);
         await initializeAdMob();
         await showBanner();
       }
@@ -49,9 +44,6 @@ function App() {
 
   return (
     <ThemeProvider>
-      {/* アプリ全体を囲むdivにスタイルを追加 
-         ネイティブ環境（スマホ）の場合のみ、下に60pxの余白を空ける
-      */}
       <div style={{
         width: '100%',
         height: '100%',
@@ -59,14 +51,21 @@ function App() {
         boxSizing: 'border-box',
         position: 'relative'
       }}>
-        {/* 画面の状態によって表示するコンポーネントを切り替える */}
         {screen === 'home' ? (
           <HomeScreen
-            onStart={() => setScreen('game')}
+            onStart={() => {
+              play(); // ゲーム開始時に再生
+              setScreen('game');
+            }}
             bestScore={highScore}
+            isPlaying={isPlaying}
+            toggleBGM={toggleBGM}
           />
         ) : (
-          <GameContainer onBack={() => setScreen('home')} />
+          <GameContainer onBack={() => {
+            stop(); // ホームに戻るときは停止（必要なければ削除可）
+            setScreen('home');
+          }} />
         )}
       </div>
     </ThemeProvider>

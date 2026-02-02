@@ -1,16 +1,18 @@
 import { motion } from 'framer-motion';
 import { Volume2, VolumeX, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { useBGM } from '../hooks/useBGM';
+// useBGMのインポートは削除
 
 interface HomeScreenProps {
     onStart: () => void;
     bestScore: number;
+    isPlaying: boolean;   // 追加
+    toggleBGM: () => void; // 追加
 }
 
-export const HomeScreen = ({ onStart, bestScore }: HomeScreenProps) => {
+export const HomeScreen = ({ onStart, bestScore, isPlaying, toggleBGM }: HomeScreenProps) => {
     const { theme, toggleTheme } = useTheme();
-    const { isPlaying, toggleBGM } = useBGM('/sounds/bgm.mp3');
+    // useBGMフックの呼び出しを削除
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full min-h-[60vh] gap-12 z-10 relative">
