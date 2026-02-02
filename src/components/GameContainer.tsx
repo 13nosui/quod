@@ -14,8 +14,6 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
     const {
         smallBlocks,
         slide,
-        score,
-        highScore,
         isNewRecord,
         gameOver,
         isProcessing,
@@ -23,7 +21,7 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
         nextSpawnColors,
         nextSpawnPos,
         bumpEvent,
-        comboCount
+        score // Keep score for the Game Over overlay
     } = useGameLogic();
 
     const [touchStart, setTouchStart] = useState<{ x: number, y: number } | null>(null);
@@ -127,31 +125,7 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
                 </div>
             </div>
 
-            {/* Score & Combo */}
-            <div className="flex flex-col items-center gap-1 z-10 mt-12">
-                <div className="text-[10px] font-mono uppercase tracking-[0.2em] opacity-30">SCORE</div>
-                <motion.div
-                    key={score}
-                    initial={{ scale: 1.1, color: '#fff' }}
-                    animate={{ scale: 1, color: 'var(--text-primary)' }}
-                    className="text-5xl font-bungee"
-                >
-                    {score.toString().padStart(6, '0')}
-                </motion.div>
-
-                <AnimatePresence>
-                    {comboCount > 1 && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                            className="text-sm font-bungee text-[#FF595E] absolute top-28"
-                        >
-                            {comboCount} CHAIN!
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+            {/* Removed Score & Combo Display */}
 
             {/* 3D Scene Area */}
             <div className="w-full aspect-square max-w-[500px] relative z-0">
@@ -163,13 +137,7 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
                 />
             </div>
 
-            {/* Footer Info */}
-            <div className="absolute bottom-8 flex flex-col items-center gap-1 opacity-30 z-10">
-                <div className="text-[10px] font-mono uppercase tracking-[0.2em]">BEST</div>
-                <div className="text-sm font-bungee">
-                    {Math.max(score, highScore).toString().padStart(6, '0')}
-                </div>
-            </div>
+            {/* Removed Footer Info */}
 
             {/* Game Over Overlay */}
             <AnimatePresence>
