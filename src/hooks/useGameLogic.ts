@@ -37,6 +37,7 @@ export const useGameLogic = () => {
     const [score, setScore] = useState(0);
     const [highScore, setHighScore] = useState(0);
     const [highScoreDate, setHighScoreDate] = useState<string | null>(null);
+    const [isNewRecord, setIsNewRecord] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [gameOver, setGameOver] = useState(false);
     const [nextSpawnColors, setNextSpawnColors] = useState<string[]>([]);
@@ -68,32 +69,41 @@ export const useGameLogic = () => {
         setSmallBlocks(initialGrid);
         setNextSpawnColors(nextBatch);
 
-        // Initial match check
+        // Initial match check (ignore score)
         const { finalGrid } = await processMatches(initialGrid);
 
         setNextSpawnPos(findRandom2x2EmptyArea(finalGrid));
         setScore(0);
         setComboCount(0);
         setGameOver(false);
+        setIsNewRecord(false);
         setIsProcessing(false);
 
         localStorage.removeItem(STORAGE_KEY);
     }, []);
 
-    // Load High Score and Game State on mount
-    useEffect(() => {
-        // Load High Score
-        const savedHighScore = localStorage.getItem(HIGHSCORE_KEY);
-        if (savedHighScore) {
-            setHighScore(parseInt(savedHighScore, 10));
+    const handleGameOver = useCallback((finalScore: number) => {
+        setGameOver(true);
+        setIsProcessing(false);
+
+        if (finalScore > highScore) {
+            setHighScore(finalScore);
+            setIsNewRecord(true); // 紙吹雪フラグON
+
+            localStorage.setItem(HIGHSCORE_KEY, finalScore.toString());
+            const dateStr = new Date().toISOString();
+            localStorage.setItem(HIGHSCORE_DATE_KEY, dateStr);
+            setHighScoreDate(dateStr);
         }
+    }, [highScore]);
+
+    useEffect(() => {
+        const savedHighScore = localStorage.getItem(HIGHSCORE_KEY);
+        if (savedHighScore) setHighScore(parseInt(savedHighScore, 10));
 
         const savedHighScoreDate = localStorage.getItem(HIGHSCORE_DATE_KEY);
-        if (savedHighScoreDate) {
-            setHighScoreDate(savedHighScoreDate);
-        }
+        if (savedHighScoreDate) setHighScoreDate(savedHighScoreDate);
 
-        // Load Game State
         const savedState = localStorage.getItem(STORAGE_KEY);
         if (savedState) {
             try {
@@ -110,44 +120,25 @@ export const useGameLogic = () => {
                 console.error("Failed to load saved state", e);
             }
         }
-
-        // If no saved state or error, start fresh
         resetGame();
     }, [resetGame]);
 
-    // Save Game State on changes
     useEffect(() => {
         if (!gameOver && smallBlocks.some(row => row.some(cell => cell !== null))) {
-            const state = {
-                smallBlocks,
-                score,
-                nextSpawnColors,
-                nextSpawnPos,
-                comboCount
-            };
+            const state = { smallBlocks, score, nextSpawnColors, nextSpawnPos, comboCount };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         } else if (gameOver) {
             localStorage.removeItem(STORAGE_KEY);
         }
     }, [smallBlocks, score, nextSpawnColors, nextSpawnPos, comboCount, gameOver]);
 
-    // Update High Score
-    useEffect(() => {
-        if (score > highScore) {
-            const now = new Date().toISOString();
-            setHighScore(score);
-            setHighScoreDate(now);
-            localStorage.setItem(HIGHSCORE_KEY, score.toString());
-            localStorage.setItem(HIGHSCORE_DATE_KEY, now);
-        }
-    }, [score, highScore]);
-
-    // Helper to process matches and gravity (returns the final grid state)
-    const processMatches = async (startGrid: GridState, dx: number = 0, dy: number = 0): Promise<{ finalGrid: GridState, totalMatches: boolean }> => {
+    // ★重要修正：獲得スコアを返すように変更
+    const processMatches = async (startGrid: GridState, dx: number = 0, dy: number = 0): Promise<{ finalGrid: GridState, totalMatches: boolean, turnScore: number }> => {
         let currentGrid = startGrid;
         let loop = true;
         let currentTurnMatches = false;
         let activeCombo = comboCount;
+        let turnScore = 0; // 今回の連鎖で稼いだスコア合計
 
         while (loop) {
             const matches = getAllMatches(currentGrid);
@@ -159,14 +150,16 @@ export const useGameLogic = () => {
             playSound('match');
             const baseScore = matches.length * 100;
             const bonus = activeCombo * 50;
-            setScore(s => s + baseScore + bonus);
+            const gain = baseScore + bonus;
+
+            turnScore += gain;
+            setScore(s => s + gain); // 画面表示用にはstateも更新
 
             const tempGrid = currentGrid.map(row => [...row]);
             matches.forEach(p => { tempGrid[p.x][p.y] = null; });
             setSmallBlocks(tempGrid);
             await new Promise(r => setTimeout(r, 250));
 
-            // Gravity in the direction of the last slide
             const { newGrid: slidGrid } = slideGrid(tempGrid, dx, dy);
 
             if (JSON.stringify(slidGrid) !== JSON.stringify(tempGrid)) {
@@ -179,13 +172,10 @@ export const useGameLogic = () => {
             }
         }
 
-        if (currentTurnMatches) {
-            setComboCount(activeCombo);
-        } else {
-            setComboCount(0);
-        }
+        if (currentTurnMatches) setComboCount(activeCombo);
+        else setComboCount(0);
 
-        return { finalGrid: currentGrid, totalMatches: currentTurnMatches };
+        return { finalGrid: currentGrid, totalMatches: currentTurnMatches, turnScore };
     };
 
     const slide = useCallback(async (direction: Direction) => {
@@ -197,6 +187,9 @@ export const useGameLogic = () => {
         if (direction === 'RIGHT') dx = 1;
         if (direction === 'UP') dy = -1;
         if (direction === 'DOWN') dy = 1;
+
+        // ★重要修正：現在のスコアをローカル変数で保持
+        let currentTotalScore = score;
 
         // --- PHASE 1: SLIDE ---
         const { newGrid, moved } = slideGrid(smallBlocks, dx, dy);
@@ -211,11 +204,12 @@ export const useGameLogic = () => {
         await new Promise(r => setTimeout(r, 150));
 
         // --- PHASE 2: MATCH (After Slide) ---
-        let { finalGrid: gridAfterSlideMatches } = await processMatches(newGrid, dx, dy);
+        // ★戻り値の turnScore を受け取り加算
+        let { finalGrid: gridAfterSlideMatches, turnScore: score1 } = await processMatches(newGrid, dx, dy);
+        currentTotalScore += score1;
 
         // --- PHASE 3: SPAWN ---
         let pos = nextSpawnPos;
-        // If no pre-calculated spawn (e.g., during "one chance" state), try to find one now
         if (!pos || !is2x2AreaEmpty(gridAfterSlideMatches, pos.x, pos.y)) {
             pos = findRandom2x2EmptyArea(gridAfterSlideMatches);
         }
@@ -230,11 +224,11 @@ export const useGameLogic = () => {
             // --- PHASE 4: MATCH (After Spawn) ---
             const result = await processMatches(gridAfterSpawn, 0, 0);
             gridAfterSpawn = result.finalGrid;
+            currentTotalScore += result.turnScore; // ★ここでも加算
         } else {
             // Spawn Failed -> GAME OVER
-            // The player used their slide but failed to create space.
-            setGameOver(true);
-            setIsProcessing(false);
+            // ★計算済みの最新スコアを渡す
+            handleGameOver(currentTotalScore);
             return;
         }
 
@@ -242,15 +236,16 @@ export const useGameLogic = () => {
         const futurePos = findRandom2x2EmptyArea(gridAfterSpawn);
 
         if (!futurePos) {
-            // Board full. Can we survive by moving?
             if (!canClearSpaceForSpawn(gridAfterSpawn)) {
-                setGameOver(true);
+                // ★計算済みの最新スコアを渡す
+                handleGameOver(currentTotalScore);
+                return;
             }
         }
 
         setNextSpawnPos(futurePos);
         setIsProcessing(false);
-    }, [smallBlocks, isProcessing, gameOver, nextSpawnPos, nextSpawnColors, comboCount]);
+    }, [smallBlocks, isProcessing, gameOver, nextSpawnPos, nextSpawnColors, comboCount, highScore, handleGameOver, score]);
 
-    return { smallBlocks, slide, score, highScore, highScoreDate, gameOver, isProcessing, resetGame, nextSpawnColors, nextSpawnPos, bumpEvent, comboCount };
+    return { smallBlocks, slide, score, highScore, highScoreDate, isNewRecord, gameOver, isProcessing, resetGame, nextSpawnColors, nextSpawnPos, bumpEvent, comboCount };
 };

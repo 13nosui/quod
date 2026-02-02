@@ -1,42 +1,80 @@
-import { useEffect, useCallback, useState } from 'react';
-import type { Direction, GridState, Point } from '../types/game';
+import { useEffect, useState, useCallback } from 'react';
+import { useGameLogic } from '../hooks/useGameLogic';
 import { GameScene } from './3d/GameScene';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Home, Trophy, RotateCcw } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 interface GameContainerProps {
-    smallBlocks: GridState;
-    slide: (direction: Direction) => void;
-    score: number;
-    highScore: number;
-    highScoreDate: string | null;
-    gameOver: boolean;
-    isProcessing: boolean;
-    nextSpawnColors: string[];
-    nextSpawnPos: Point | null;
-    bumpEvent: { x: number; y: number; id: number } | null;
-    comboCount: number;
+    onBack: () => void;
 }
 
-export const GameContainer = ({
-    smallBlocks,
-    slide,
-    score,
-    highScore,
-    highScoreDate,
-    gameOver,
-    isProcessing,
-    nextSpawnColors,
-    nextSpawnPos,
-    bumpEvent,
-    comboCount
-}: GameContainerProps) => {
+export const GameContainer = ({ onBack }: GameContainerProps) => {
+    // ロジックフックを使用
+    const {
+        smallBlocks,
+        slide,
+        score,
+        highScore,
+        highScoreDate,
+        isNewRecord,
+        gameOver,
+        isProcessing,
+        resetGame,
+        nextSpawnColors,
+        nextSpawnPos,
+        bumpEvent,
+        comboCount
+    } = useGameLogic();
 
     const [touchStart, setTouchStart] = useState<{ x: number, y: number } | null>(null);
 
-    const handleSlide = useCallback((dir: Direction) => {
-        slide(dir);
-    }, [slide]);
+    // キーボード操作のリスナー
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (gameOver || isProcessing) return;
+            switch (e.key) {
+                case 'ArrowUp': slide('UP'); break;
+                case 'ArrowDown': slide('DOWN'); break;
+                case 'ArrowLeft': slide('LEFT'); break;
+                case 'ArrowRight': slide('RIGHT'); break;
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [slide, gameOver, isProcessing]);
 
+    // ベストスコア更新時の紙吹雪エフェクト
+    useEffect(() => {
+        if (gameOver && isNewRecord) {
+            const duration = 3000;
+            const end = Date.now() + duration;
+
+            const frame = () => {
+                confetti({
+                    particleCount: 3,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#FF595E', '#1982C4', '#FFCA3A', '#8AC926']
+                });
+                confetti({
+                    particleCount: 3,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#FF595E', '#1982C4', '#FFCA3A', '#8AC926']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            };
+            frame();
+        }
+    }, [gameOver, isNewRecord]);
+
+    // タッチ操作ハンドラ
     const handleTouchStart = (e: React.TouchEvent) => {
         const touch = e.touches[0];
         setTouchStart({ x: touch.clientX, y: touch.clientY });
@@ -48,124 +86,152 @@ export const GameContainer = ({
         const touch = e.changedTouches[0];
         const deltaX = touch.clientX - touchStart.x;
         const deltaY = touch.clientY - touchStart.y;
-        const threshold = 30;
+        const absX = Math.abs(deltaX);
+        const absY = Math.abs(deltaY);
 
-        if (Math.abs(deltaX) > threshold || Math.abs(deltaY) > threshold) {
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                // Horizontal Swipe
-                handleSlide(deltaX > 0 ? 'RIGHT' : 'LEFT');
+        if (Math.max(absX, absY) > 30) { // スワイプ判定の閾値
+            if (absX > absY) {
+                slide(deltaX > 0 ? 'RIGHT' : 'LEFT');
             } else {
-                // Vertical Swipe
-                handleSlide(deltaY > 0 ? 'DOWN' : 'UP');
+                slide(deltaY > 0 ? 'DOWN' : 'UP');
             }
         }
         setTouchStart(null);
     };
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            switch (e.key) {
-                case 'ArrowUp': handleSlide('UP'); break;
-                case 'ArrowDown': handleSlide('DOWN'); break;
-                case 'ArrowLeft': handleSlide('LEFT'); break;
-                case 'ArrowRight': handleSlide('RIGHT'); break;
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [handleSlide]);
-
     return (
         <div
-            className="flex flex-col items-center justify-center p-0 gap-8 select-none w-[95vw] max-w-[600px] mx-auto relative text-center touch-none"
+            className="flex flex-col items-center justify-center p-0 gap-8 select-none w-[95vw] max-w-[600px] mx-auto relative text-center touch-none h-[100dvh]"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
         >
-            {/* Combo Indicator */}
-            <AnimatePresence>
-                {comboCount > 1 && (
-                    <motion.div
-                        initial={{ scale: 0, opacity: 0, y: 20 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0, opacity: 0, y: -20 }}
-                        className="absolute top-20 right-4 z-50 flex flex-col items-center"
-                    >
-                        <motion.div
-                            animate={{ y: [0, -10, 0] }}
-                            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                            className="flex flex-col items-center"
-                        >
-                            <span className="text-5xl font-black text-amber-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)] italic leading-tight">
-                                {comboCount}
-                            </span>
-                            <span className="text-[10px] font-black text-white bg-ruby-500 px-3 py-0.5 rounded-full shadow-lg -mt-1 tracking-widest uppercase">
-                                COMBO
-                            </span>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* Header Area */}
+            <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10">
+                <button
+                    onClick={onBack}
+                    className="p-2 bg-white/10 backdrop-blur-md rounded-full text-text-primary opacity-70 hover:opacity-100 transition-opacity"
+                >
+                    <Home size={24} />
+                </button>
 
-            <div className="flex flex-col items-center gap-2">
-                <h1 className="text-4xl font-bungee tracking-[0.1em] uppercase">QUOD</h1>
-                <div className="text-xs font-mono opacity-50 uppercase tracking-widest">
-                    {gameOver ? "GAME OVER" : isProcessing ? "SWEEPING..." : "READY"}
-                </div>
-
-                {/* Next Spawn Preview */}
-                <div className="flex flex-col items-center gap-1 mt-2">
-                    <span className="text-[10px] font-mono opacity-40 uppercase tracking-widest">Next</span>
-                    <div className="grid grid-cols-2 gap-1 p-1.5 bg-gray-50/50 rounded-sm border border-gray-100/50 shadow-sm">
-                        {nextSpawnColors.map((c, i) => (
+                <div className="flex flex-col items-end">
+                    <div className="text-[10px] font-mono uppercase tracking-widest opacity-50 mb-1">NEXT</div>
+                    <div className="grid grid-cols-2 gap-0.5 p-1 bg-white/5 rounded-sm border border-white/10">
+                        {nextSpawnColors.map((color, i) => (
                             <div
                                 key={i}
-                                className="w-3 h-3 rounded-[2px]"
-                                style={{
-                                    backgroundColor: c,
-                                    boxShadow: `inset 0 0 4px rgba(0,0,0,0.1)`
-                                }}
+                                className="w-3 h-3 rounded-[1px]"
+                                style={{ backgroundColor: color }}
                             />
                         ))}
                     </div>
                 </div>
             </div>
 
-            <GameScene
-                smallBlocks={smallBlocks}
-                nextSpawnPos={nextSpawnPos}
-                nextSpawnColors={nextSpawnColors}
-                bumpEvent={bumpEvent}
-            />
-
-            <div className="flex flex-col items-center gap-1">
-                <div className="flex flex-col items-center">
-                    <div className="text-[10px] font-mono uppercase tracking-[0.2em] opacity-30">Best Score</div>
-                    <div className="flex flex-col items-center gap-0.5">
-                        <div className="text-sm font-bungee opacity-30 mt-[-2px]">
-                            {highScore.toString().padStart(6, '0')}
-                        </div>
-                        {highScoreDate && (
-                            <div className="text-[9px] font-mono opacity-20 uppercase tracking-tighter">
-                                {new Date(highScoreDate).toLocaleDateString()}
-                            </div>
-                        )}
-                    </div>
-                </div>
-                <div className="text-xs font-mono uppercase tracking-widest opacity-30 mt-2">Current Score</div>
+            {/* Score & Combo */}
+            <div className="flex flex-col items-center gap-1 z-10 mt-12">
+                <div className="text-[10px] font-mono uppercase tracking-[0.2em] opacity-30">SCORE</div>
                 <motion.div
                     key={score}
-                    initial={{ y: -5, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    className="text-3xl font-bungee"
+                    initial={{ scale: 1.1, color: '#fff' }}
+                    animate={{ scale: 1, color: 'var(--text-primary)' }}
+                    className="text-5xl font-bungee"
                 >
                     {score.toString().padStart(6, '0')}
                 </motion.div>
+
+                <AnimatePresence>
+                    {comboCount > 1 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="text-sm font-bungee text-[#FF595E] absolute top-28"
+                        >
+                            {comboCount} CHAIN!
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
-            <div className="text-[10px] font-mono opacity-30 text-center uppercase tracking-widest">
-                ARROWS or SWIPE TO SLIDE<br />
-                MATCH 3+ COLORS (ORTHO ONLY)
+            {/* 3D Scene Area */}
+            <div className="w-full aspect-square max-w-[500px] relative z-0">
+                <GameScene
+                    smallBlocks={smallBlocks}
+                    nextSpawnPos={nextSpawnPos}
+                    bumpEvent={bumpEvent}
+                    isProcessing={isProcessing}
+                />
             </div>
+
+            {/* Footer Info */}
+            <div className="absolute bottom-8 flex flex-col items-center gap-1 opacity-30 z-10">
+                <div className="text-[10px] font-mono uppercase tracking-[0.2em]">BEST</div>
+                <div className="text-sm font-bungee">
+                    {Math.max(score, highScore).toString().padStart(6, '0')}
+                </div>
+            </div>
+
+            {/* Game Over Overlay */}
+            <AnimatePresence>
+                {gameOver && (
+                    <motion.div
+                        initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                        animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 text-white"
+                    >
+                        <motion.h2
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.1 }}
+                            className="text-6xl font-bungee text-[#FF595E] mb-2 tracking-wider"
+                        >
+                            GAME<br />OVER
+                        </motion.h2>
+
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="flex flex-col items-center gap-2 mb-8"
+                        >
+                            <div className="text-xs font-mono opacity-60 tracking-widest">FINAL SCORE</div>
+                            <div className="text-5xl font-bungee">{score.toString().padStart(6, '0')}</div>
+
+                            {isNewRecord && (
+                                <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="flex items-center gap-2 text-[#FFCA3A] font-bungee text-lg mt-2 px-4 py-1 bg-white/10 rounded-full"
+                                >
+                                    <Trophy size={20} /> NEW RECORD!
+                                </motion.div>
+                            )}
+                        </motion.div>
+
+                        <div className="flex gap-4">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={onBack}
+                                className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-sm font-bungee tracking-wider transition-colors"
+                            >
+                                <Home size={18} /> HOME
+                            </motion.button>
+
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={resetGame}
+                                className="flex items-center gap-2 px-8 py-3 bg-white text-black hover:bg-gray-200 rounded-sm font-bungee tracking-wider transition-colors"
+                            >
+                                <RotateCcw size={18} /> RETRY
+                            </motion.button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
