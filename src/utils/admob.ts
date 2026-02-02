@@ -21,7 +21,7 @@ export async function initializeAdMob() {
 export async function showBanner() {
     const options: BannerAdOptions = {
         // iOS用のテストバナーID (リリース時に本番IDに書き換えます)
-        adId: 'ca-app-pub-3940256099942544/2934735716',
+        adId: 'ca-app-pub-4602027146268771/4653319895',
         adSize: BannerAdSize.ADAPTIVE_BANNER, // 画面幅に合わせる
         position: BannerAdPosition.BOTTOM_CENTER, // 下部中央
         margin: 0,
