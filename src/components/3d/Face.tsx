@@ -57,17 +57,45 @@ export const Face = ({ color }: FaceProps) => {
         );
 
     } else if (normalizedColor === '#FFD60A') {
-        // --- YELLOW: びっくり (ぱっちり目・丸い口) ---
+        // --- YELLOW: キュート (ぱっちり目 + まつ毛・丸い口) ---
+
+        // まつ毛の定義 (目の中心からの相対位置)
+        const lashes = (
+            <>
+                <mesh position={[-0.06, 0.1, 0]} rotation={[0, 0, -0.5]}>
+                    <boxGeometry args={[0.015, 0.05, 0.01]} />
+                    {material}
+                </mesh>
+                <mesh position={[0, 0.11, 0]}>
+                    <boxGeometry args={[0.015, 0.05, 0.01]} />
+                    {material}
+                </mesh>
+                <mesh position={[0.06, 0.1, 0]} rotation={[0, 0, 0.5]}>
+                    <boxGeometry args={[0.015, 0.05, 0.01]} />
+                    {material}
+                </mesh>
+            </>
+        );
+
         eyes = (
             <>
-                <mesh position={[-0.22, 0.02, 0]}>
-                    <sphereGeometry args={[0.08, 12, 12]} />
-                    {material}
-                </mesh>
-                <mesh position={[0.22, 0.02, 0]}>
-                    <sphereGeometry args={[0.08, 12, 12]} />
-                    {material}
-                </mesh>
+                {/* 左目エリア */}
+                <group position={[-0.22, 0.02, 0]}>
+                    <mesh>
+                        <sphereGeometry args={[0.08, 12, 12]} />
+                        {material}
+                    </mesh>
+                    {lashes}
+                </group>
+
+                {/* 右目エリア */}
+                <group position={[0.22, 0.02, 0]}>
+                    <mesh>
+                        <sphereGeometry args={[0.08, 12, 12]} />
+                        {material}
+                    </mesh>
+                    {lashes}
+                </group>
             </>
         );
         mouth = (
@@ -101,7 +129,7 @@ export const Face = ({ color }: FaceProps) => {
             </mesh>
         );
     } else {
-        // フォールバック (Redと同じ)
+        // フォールバック
         eyes = (
             <>
                 <mesh position={[-0.2, 0, 0]}><sphereGeometry args={[0.07, 12, 12]} />{material}</mesh>
@@ -117,7 +145,6 @@ export const Face = ({ color }: FaceProps) => {
     }
 
     return (
-        // 顔全体を少し手前(Z=0.2)かつ上(Y=0.501)に配置
         <group position={[0, 0.501, 0.2]}>
             {eyes}
             {mouth}
