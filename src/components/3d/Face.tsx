@@ -28,8 +28,9 @@ export const Face = ({ color }: FaceProps) => {
             </>
         );
         mouth = (
-            // U字の口 (Torusの下半分)
-            <mesh position={[0, -0.02, 0]} rotation={[0, 0, Math.PI]}>
+            // U字の口 (Smile)
+            // X軸で-90度回転させて寝かせ、Z軸で180度回転させてU字にする
+            <mesh position={[0, 0, 0.08]} rotation={[-Math.PI / 2, 0, Math.PI]}>
                 <torusGeometry args={[0.1, 0.03, 8, 16, Math.PI]} />
                 {material}
             </mesh>
@@ -39,6 +40,7 @@ export const Face = ({ color }: FaceProps) => {
         // --- BLUE: クール (横棒目・一直線の口) ---
         eyes = (
             <>
+                {/* 目: 表面に貼り付くボックス */}
                 <mesh position={[-0.2, 0.02, 0]}>
                     <boxGeometry args={[0.12, 0.03, 0.02]} />
                     {material}
@@ -50,7 +52,8 @@ export const Face = ({ color }: FaceProps) => {
             </>
         );
         mouth = (
-            <mesh position={[0, -0.12, 0]}>
+            // 直線の口
+            <mesh position={[0, 0, 0.12]}>
                 <boxGeometry args={[0.12, 0.03, 0.02]} />
                 {material}
             </mesh>
@@ -59,19 +62,22 @@ export const Face = ({ color }: FaceProps) => {
     } else if (normalizedColor === '#FFD60A') {
         // --- YELLOW: キュート (ぱっちり目 + まつ毛・笑顔の口) ---
 
-        // まつ毛の定義
-        const lashes = (
+        // まつ毛 (表面に寝かせる形に調整)
+        const flatLashes = (
             <>
-                <mesh position={[-0.06, 0.1, 0]} rotation={[0, 0, -0.5]}>
-                    <boxGeometry args={[0.015, 0.05, 0.01]} />
+                {/* 左寄り・上向き(Zマイナス方向) */}
+                <mesh position={[-0.06, 0, -0.08]} rotation={[0, -0.5, 0]}>
+                    <boxGeometry args={[0.015, 0.01, 0.05]} /> {/* W, H(厚み), D(長さ) */}
                     {material}
                 </mesh>
-                <mesh position={[0, 0.11, 0]}>
-                    <boxGeometry args={[0.015, 0.05, 0.01]} />
+                {/* 中央・上向き */}
+                <mesh position={[0, 0, -0.09]}>
+                    <boxGeometry args={[0.015, 0.01, 0.05]} />
                     {material}
                 </mesh>
-                <mesh position={[0.06, 0.1, 0]} rotation={[0, 0, 0.5]}>
-                    <boxGeometry args={[0.015, 0.05, 0.01]} />
+                {/* 右寄り・上向き */}
+                <mesh position={[0.06, 0, -0.08]} rotation={[0, 0.5, 0]}>
+                    <boxGeometry args={[0.015, 0.01, 0.05]} />
                     {material}
                 </mesh>
             </>
@@ -80,28 +86,28 @@ export const Face = ({ color }: FaceProps) => {
         eyes = (
             <>
                 {/* 左目エリア */}
-                <group position={[-0.22, 0.02, 0]}>
+                <group position={[-0.22, 0, 0]}>
                     <mesh>
                         <sphereGeometry args={[0.08, 12, 12]} />
                         {material}
                     </mesh>
-                    {lashes}
+                    {flatLashes}
                 </group>
 
                 {/* 右目エリア */}
-                <group position={[0.22, 0.02, 0]}>
+                <group position={[0.22, 0, 0]}>
                     <mesh>
                         <sphereGeometry args={[0.08, 12, 12]} />
                         {material}
                     </mesh>
-                    {lashes}
+                    {flatLashes}
                 </group>
             </>
         );
 
-        // 修正: 笑顔の口に変更 (U字)
+        // 笑顔の口 (Smile)
         mouth = (
-            <mesh position={[0, -0.12, 0]} rotation={[0, 0, Math.PI]}>
+            <mesh position={[0, 0, 0.12]} rotation={[-Math.PI / 2, 0, Math.PI]}>
                 <torusGeometry args={[0.06, 0.025, 8, 16, Math.PI]} />
                 {material}
             </mesh>
@@ -111,7 +117,6 @@ export const Face = ({ color }: FaceProps) => {
         // --- GREEN: のんびり (たれ目/眠り目・への字口) ---
         eyes = (
             <>
-                {/* 少し平たい目 */}
                 <mesh position={[-0.2, 0, 0]} scale={[1, 0.4, 1]}>
                     <sphereGeometry args={[0.075, 12, 12]} />
                     {material}
@@ -123,14 +128,15 @@ export const Face = ({ color }: FaceProps) => {
             </>
         );
         mouth = (
-            // への字口 (Torusの上半分)
-            <mesh position={[0, -0.12, 0]} rotation={[0, 0, 0]}>
+            // への字口 (Frown)
+            // Z軸回転なしだとアーチ状(への字)になる
+            <mesh position={[0, 0, 0.12]} rotation={[-Math.PI / 2, 0, 0]}>
                 <torusGeometry args={[0.08, 0.025, 8, 16, Math.PI]} />
                 {material}
             </mesh>
         );
     } else {
-        // フォールバック
+        // フォールバック (Redと同じ)
         eyes = (
             <>
                 <mesh position={[-0.2, 0, 0]}><sphereGeometry args={[0.07, 12, 12]} />{material}</mesh>
@@ -138,13 +144,15 @@ export const Face = ({ color }: FaceProps) => {
             </>
         );
         mouth = (
-            <mesh position={[0, -0.02, 0]} rotation={[0, 0, Math.PI]}>
+            <mesh position={[0, 0, 0.08]} rotation={[-Math.PI / 2, 0, Math.PI]}>
                 <torusGeometry args={[0.1, 0.03, 8, 16, Math.PI]} />
                 {material}
             </mesh>
         );
     }
 
+    // 顔全体をブロック上面(Y=0.501)に配置
+    // Z=0.2 は顔の中心を少し手前(アゴ寄り)にずらすオフセット
     return (
         <group position={[0, 0.501, 0.2]}>
             {eyes}
