@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion-3d';
-import { GRID_SIZE } from '../../utils/gameUtils'; // COLORSを削除
+import { GRID_SIZE } from '../../utils/gameUtils';
 
 interface Block3DProps {
     x: number;
@@ -49,8 +49,7 @@ export const Block3D = ({ x, y, color, isGhost = false, bumpEvent }: Block3DProp
                 z: targetZ + bumpOffset.z
             }}
             exit={{ scale: 0 }}
-            castShadow
-            receiveShadow
+            // castShadow, receiveShadow を削除して軽量化
             transition={{
                 duration: 0.3,
                 type: "spring",

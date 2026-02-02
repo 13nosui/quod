@@ -3,14 +3,12 @@ import * as THREE from 'three';
 import { shaderMaterial } from '@react-three/drei';
 import { GRID_SIZE } from '../../utils/gameUtils';
 
-// Define the static quod grid material with tiled squares
 const QuodGridMaterial = shaderMaterial(
     {
         uBgColor: new THREE.Color('#ffffff'),
         uTileColor: new THREE.Color('#ebebeb'),
         uGridSize: GRID_SIZE,
     },
-    // Vertex Shader: Standard position calculation
     `
     varying vec2 vUv;
     void main() {
@@ -18,7 +16,6 @@ const QuodGridMaterial = shaderMaterial(
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
     `,
-    // Fragment Shader: Tiled faint grey squares on white background
     `
     varying vec2 vUv;
     uniform float uGridSize;
@@ -27,22 +24,16 @@ const QuodGridMaterial = shaderMaterial(
 
     void main() {
         vec2 grid = fract(vUv * uGridSize);
-        
-        // Small margin/gap of ~0.02
         float margin = 0.02;
-        float mask = step(margin, grid.x) * step(margin, grid.y) * 
-                     step(grid.x, 1.0 - margin) * step(grid.y, 1.0 - margin);
-        
+        float mask = step(margin, grid.x) * step(margin, grid.y) * step(grid.x, 1.0 - margin) * step(grid.y, 1.0 - margin);
         vec3 color = mix(uBgColor, uTileColor, mask);
         gl_FragColor = vec4(color, 1.0);
     }
     `
 );
 
-// Register the material with R3F
 extend({ QuodGridMaterial });
 
-// Type augmentation for JSX
 declare module '@react-three/fiber' {
     interface ThreeElements {
         quodGridMaterial: {
@@ -63,7 +54,8 @@ declare module '@react-three/fiber' {
 
 export const ReactiveGrid = () => {
     return (
-        <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        // receiveShadow を削除
+        <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <planeGeometry args={[GRID_SIZE, GRID_SIZE]} />
             <quodGridMaterial
                 uBgColor={new THREE.Color('#ffffff')}
