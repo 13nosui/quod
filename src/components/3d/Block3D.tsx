@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion-3d';
 import { GRID_SIZE } from '../../utils/gameUtils';
-import { Face } from './Face'; // 追加: 顔コンポーネントをインポート
+import { Face } from './Face';
 
 interface Block3DProps {
     x: number;
@@ -66,8 +66,8 @@ export const Block3D = ({ x, y, color, isGhost = false, bumpEvent }: Block3DProp
                 opacity={isGhost ? 0.5 : 1}
             />
 
-            {/* 追加: ゴーストでなければ顔を表示 */}
-            {!isGhost && <Face />}
+            {/* 修正: colorプロパティをFaceに渡す */}
+            {!isGhost && <Face color={color} />}
 
         </motion.mesh>
     );
