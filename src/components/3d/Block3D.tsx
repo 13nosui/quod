@@ -10,7 +10,7 @@ interface Block3DProps {
     color: string;
     isGhost?: boolean;
     bumpEvent?: { x: number; y: number; id: number } | null;
-    expression?: 'normal' | 'sleep' | 'yawn'; // 追加
+    expression?: 'normal' | 'sleep' | 'yawn';
 }
 
 export const Block3D = ({ x, y, color, isGhost = false, bumpEvent, expression = 'normal' }: Block3DProps) => {
@@ -40,7 +40,6 @@ export const Block3D = ({ x, y, color, isGhost = false, bumpEvent, expression = 
         return { stiffness: 120, damping: 10, mass: 1 };
     }, [isGhost]);
 
-    // アニメーションの定義
     let animateProps: any = {
         scale: isGhost ? 0.95 : 1,
         opacity: isGhost ? 0.4 : 1,
@@ -49,12 +48,10 @@ export const Block3D = ({ x, y, color, isGhost = false, bumpEvent, expression = 
         z: targetZ + bumpOffset.z
     };
 
-    // 寝ているときは呼吸アニメーション（Y軸スケールをゆっくり伸縮）
-    // animatePropsの一部として上書きする
     if (!isGhost && expression === 'sleep') {
         animateProps = {
             ...animateProps,
-            scaleY: [1, 1.05, 1], // 1 -> 1.05 -> 1 と伸縮
+            scaleY: [1, 1.05, 1],
             transition: {
                 ...springConfig,
                 scaleY: {
@@ -65,7 +62,6 @@ export const Block3D = ({ x, y, color, isGhost = false, bumpEvent, expression = 
             }
         };
     } else {
-        // 通常時
         animateProps.scaleY = 1;
     }
 
@@ -82,10 +78,10 @@ export const Block3D = ({ x, y, color, isGhost = false, bumpEvent, expression = 
             }}
         >
             <boxGeometry args={[size, size, size]} />
-            <meshStandardMaterial
+            {/* 最適化: meshStandardMaterial -> meshLambertMaterial */}
+            {/* roughness, metalness は Lambertにはないので削除 */}
+            <meshLambertMaterial
                 color={color}
-                roughness={0.2}
-                metalness={0.1}
                 transparent
                 opacity={isGhost ? 0.5 : 1}
             />

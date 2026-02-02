@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'; // useStateを追加
+import { useEffect, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import { ReactiveGrid } from './ReactiveGrid';
@@ -7,7 +7,6 @@ import type { GridState, Point } from '../../types/game';
 import { GRID_SIZE } from '../../utils/gameUtils';
 import { AnimatePresence } from 'framer-motion';
 
-// レスポンシブ対応カメラコントローラー
 const ResponsiveCamera = () => {
     const { camera, size } = useThree();
 
@@ -44,31 +43,21 @@ export const GameScene = ({ smallBlocks, bumpEvent }: GameSceneProps) => {
         col.map((block, y) => block ? { ...block, x, y } : null)
     ).filter((b): b is NonNullable<typeof b> => b !== null);
 
-    // --- アイドルアニメーション制御 ---
     const [idleBlockId, setIdleBlockId] = useState<string | null>(null);
     const [idleType, setIdleType] = useState<'sleep' | 'yawn'>('sleep');
 
     useEffect(() => {
-        // 盤面が変化した(ユーザーが操作した)ら、アイドル状態をリセット
         setIdleBlockId(null);
-
-        // 3秒後にアイドルイベントを発火
         const timer = setTimeout(() => {
             if (activeBlocks.length > 0) {
-                // ランダムなブロックを1つ選ぶ
                 const randomBlock = activeBlocks[Math.floor(Math.random() * activeBlocks.length)];
-
-                // 70%で睡眠、30%であくび
                 const type = Math.random() > 0.3 ? 'sleep' : 'yawn';
-
                 setIdleBlockId(randomBlock.id);
                 setIdleType(type);
             }
         }, 3000);
-
         return () => clearTimeout(timer);
-    }, [smallBlocks]); // smallBlocksが変化するたびにタイマーリセット
-    // -----------------------------
+    }, [smallBlocks]);
 
     return (
         <div style={{
@@ -84,7 +73,8 @@ export const GameScene = ({ smallBlocks, bumpEvent }: GameSceneProps) => {
                     antialias: false,
                     stencil: false,
                     depth: true,
-                    powerPreference: "high-performance"
+                    powerPreference: "high-performance",
+                    precision: "mediump" // 最適化: 精度をmediumpに下げる
                 }}
             >
                 <PerspectiveCamera
@@ -113,7 +103,6 @@ export const GameScene = ({ smallBlocks, bumpEvent }: GameSceneProps) => {
                             type="small"
                             color={block.color}
                             bumpEvent={bumpEvent}
-                            // アイドル対象のブロックなら表情を変える
                             expression={block.id === idleBlockId ? idleType : 'normal'}
                         />
                     ))}
