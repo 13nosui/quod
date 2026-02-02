@@ -107,7 +107,7 @@ export const GameContainer = ({
             </AnimatePresence>
 
             <div className="flex flex-col items-center gap-2">
-                <h1 className="text-4xl font-bungee tracking-[0.1em] uppercase">SHARDS</h1>
+                <h1 className="text-4xl font-bungee tracking-[0.1em] uppercase">QUOD</h1>
                 <div className="text-xs font-mono opacity-50 uppercase tracking-widest">
                     {gameOver ? "GAME OVER" : isProcessing ? "SWEEPING..." : "READY"}
                 </div>

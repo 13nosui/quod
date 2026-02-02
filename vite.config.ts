@@ -12,9 +12,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'SHARDS',
-        short_name: 'SHARDS',
-        description: 'A satisfying puzzle game',
+        name: 'QUOD',
+        short_name: 'QUOD',
+        description: 'A minimalist spatial puzzle game.',
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',

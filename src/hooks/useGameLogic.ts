@@ -25,9 +25,9 @@ const generateSpawnColors = (): string[] => {
     return selectedColors;
 };
 
-const STORAGE_KEY = 'shards-game-state';
-const HIGHSCORE_KEY = 'shards-highscore';
-const HIGHSCORE_DATE_KEY = 'shards-highscore-date';
+const STORAGE_KEY = 'quod-state';
+const HIGHSCORE_KEY = 'quod-highscore';
+const HIGHSCORE_DATE_KEY = 'quod-highscore-date';
 
 export const useGameLogic = () => {
     const [smallBlocks, setSmallBlocks] = useState<GridState>(() =>

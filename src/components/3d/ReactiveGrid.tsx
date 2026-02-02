@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { shaderMaterial } from '@react-three/drei';
 import { GRID_SIZE } from '../../utils/gameUtils';
 
-// Define the static shards grid material with tiled squares
-const ShardsGridMaterial = shaderMaterial(
+// Define the static quod grid material with tiled squares
+const QuodGridMaterial = shaderMaterial(
     {
         uBgColor: new THREE.Color('#ffffff'),
         uTileColor: new THREE.Color('#ebebeb'),
@@ -40,12 +40,12 @@ const ShardsGridMaterial = shaderMaterial(
 );
 
 // Register the material with R3F
-extend({ ShardsGridMaterial });
+extend({ QuodGridMaterial });
 
 // Type augmentation for JSX
 declare module '@react-three/fiber' {
     interface ThreeElements {
-        shardsGridMaterial: {
+        quodGridMaterial: {
             attach?: string
             args?: any[]
             ref?: any
@@ -65,7 +65,7 @@ export const ReactiveGrid = () => {
     return (
         <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
             <planeGeometry args={[GRID_SIZE, GRID_SIZE]} />
-            <shardsGridMaterial
+            <quodGridMaterial
                 uBgColor={new THREE.Color('#ffffff')}
                 uTileColor={new THREE.Color('#ebebeb')}
                 uGridSize={GRID_SIZE}

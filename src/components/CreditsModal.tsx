@@ -21,7 +21,7 @@ export const CreditsModal = () => {
             <Dialog.Content maxWidth="450px" style={{ maxHeight: '80vh', overflow: 'hidden' }}>
                 <Dialog.Title>Credits</Dialog.Title>
                 <Dialog.Description size="2" mb="4">
-                    SHARDS is brought to you by:
+                    QUOD is brought to you by:
                 </Dialog.Description>
 
                 <ScrollArea type="auto" scrollbars="vertical" style={{ maxHeight: '50vh' }}>
