@@ -57,9 +57,9 @@ export const Face = ({ color }: FaceProps) => {
         );
 
     } else if (normalizedColor === '#FFD60A') {
-        // --- YELLOW: キュート (ぱっちり目 + まつ毛・丸い口) ---
+        // --- YELLOW: キュート (ぱっちり目 + まつ毛・笑顔の口) ---
 
-        // まつ毛の定義 (目の中心からの相対位置)
+        // まつ毛の定義
         const lashes = (
             <>
                 <mesh position={[-0.06, 0.1, 0]} rotation={[0, 0, -0.5]}>
@@ -98,10 +98,11 @@ export const Face = ({ color }: FaceProps) => {
                 </group>
             </>
         );
+
+        // 修正: 笑顔の口に変更 (U字)
         mouth = (
-            // Oの字の口 (完全な円)
-            <mesh position={[0, -0.12, 0]}>
-                <torusGeometry args={[0.06, 0.025, 8, 16, Math.PI * 2]} />
+            <mesh position={[0, -0.12, 0]} rotation={[0, 0, Math.PI]}>
+                <torusGeometry args={[0.06, 0.025, 8, 16, Math.PI]} />
                 {material}
             </mesh>
         );
