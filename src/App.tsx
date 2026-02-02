@@ -1,17 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react'; // useStateを追加
 import { GameContainer } from './components/GameContainer';
 import { ThemeProvider } from './context/ThemeContext';
-// ▼ 追加: AdMobの関数をインポート
 import { initializeAdMob, showBanner } from './utils/admob';
 import './index.css';
 
 function App() {
-  // ▼ 追加: 起動時にAdMob初期化＆バナー表示
+  // Capacitor環境（スマホアプリ）かどうかを判定するステート
+  const [isNative, setIsNative] = useState(false);
+
   useEffect(() => {
     const initAds = async () => {
-      // ネイティブアプリ（スマホ）で動いているか判定
-      // Capacitor環境下でのみ実行する
+      // window.Capacitor が存在するか確認
       if (window.Capacitor) {
+        setIsNative(true); // ネイティブ環境と判定
         await initializeAdMob();
         await showBanner();
       }
@@ -21,12 +22,22 @@ function App() {
 
   return (
     <ThemeProvider>
-      <GameContainer onBack={() => { }} />
+      {/* アプリ全体を囲むdivにスタイルを追加 
+         ネイティブ環境（スマホ）の場合のみ、下に60pxの余白を空ける
+      */}
+      <div style={{
+        width: '100%',
+        height: '100%',
+        paddingBottom: isNative ? '60px' : '0px',
+        boxSizing: 'border-box',
+        position: 'relative'
+      }}>
+        <GameContainer onBack={() => { }} />
+      </div>
     </ThemeProvider>
   );
 }
 
-// TypeScriptのエラー回避用（window.Capacitorの型定義）
 declare global {
   interface Window {
     Capacitor: any;
