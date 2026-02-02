@@ -3,11 +3,10 @@ import { GameContainer } from './components/GameContainer'
 import { HomeScreen } from './components/HomeScreen'
 import { useTheme } from './context/ThemeContext'
 import { useBGM } from './hooks/useBGM'
-import { CreditsModal } from './components/CreditsModal'
+// CreditsModalのインポートを削除
 import { Sun, Moon, Volume2, VolumeX } from 'lucide-react'
 import { IconButton, Flex } from '@radix-ui/themes'
 import { AnimatePresence, motion } from 'framer-motion'
-// import { useGameLogic } ... は削除しました
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -17,7 +16,6 @@ function App() {
   const { isPlaying: isBgmPlaying, toggleBGM } = useBGM('/sounds/bgm.mp3');
 
   useEffect(() => {
-    // 既存の読み込みロジック (quod-records対応版)
     const savedRecords = localStorage.getItem('quod-records');
     if (savedRecords) {
       try {
@@ -29,7 +27,6 @@ function App() {
       } catch (e) { console.error(e); }
     }
 
-    // 古いキーのフォールバック
     const savedOld = localStorage.getItem('quod-highscore');
     if (savedOld) {
       setBestScore(parseInt(savedOld, 10));
@@ -68,7 +65,7 @@ function App() {
               className="absolute top-6 right-6 z-50"
             >
               <Flex gap="3">
-                <CreditsModal />
+                {/* CreditsModalを削除し、テーマ切り替えボタンのみ配置 */}
                 <IconButton
                   variant="soft"
                   color="gray"
