@@ -14,71 +14,58 @@ interface Block3DProps {
 export const Block3D = ({ x, y, color, isGhost = false, bumpEvent }: Block3DProps) => {
     const [bumpOffset, setBumpOffset] = useState({ x: 0, z: 0 });
 
-    // Handle blocked move "jelly" feedback
     useEffect(() => {
         if (bumpEvent) {
-            // Apply a small pull in the attempted direction
             setBumpOffset({
                 x: bumpEvent.x * 0.2,
                 z: bumpEvent.y * 0.2
             });
-
-            // Quick reset to trigger the spring snap-back
             const timer = setTimeout(() => {
                 setBumpOffset({ x: 0, z: 0 });
             }, 60);
-
             return () => clearTimeout(timer);
         }
     }, [bumpEvent]);
 
-    // Random stagger for spawn animation
     const spawnDelay = useMemo(() => isGhost ? 0 : Math.random() * 0.15, [isGhost]);
 
-    // Convert grid coordinates to world coordinates (XZ Floor Plane)
     const size = 0.96;
     const targetX = (x - (GRID_SIZE - 1) / 2);
-    const targetZ = (y - (GRID_SIZE - 1) / 2); // Map grid Y to 3D Z axis
+    const targetZ = (y - (GRID_SIZE - 1) / 2);
 
-    // Dynamic spring profile based on jelly color
     const springConfig = useMemo(() => {
         if (isGhost) return { stiffness: 100, damping: 20 };
-        if (color === COLORS[0]) return { stiffness: 120, damping: 10, mass: 1 };
-        if (color === COLORS[1]) return { stiffness: 160, damping: 15, mass: 1.2 };
-        if (color === COLORS[2]) return { stiffness: 80, damping: 6, mass: 0.8 };
-        if (color === COLORS[3]) return { stiffness: 180, damping: 8, mass: 1 };
         return { stiffness: 120, damping: 10, mass: 1 };
-    }, [color, isGhost]);
+    }, [isGhost]);
 
     return (
         <motion.mesh
+            // 初期スケールを0ではなく0.1にして、レンダリングされているか確認しやすくする
+            // もしくは animate が効いていない場合のために initial を targetX/Z に合わせる
             initial={{ scale: 0, x: targetX, y: size / 2, z: targetZ }}
             animate={{
-                scale: isGhost ? [0.95, 1, 0.95] : 1,
-                opacity: isGhost ? [0.2, 0.4, 0.2] : 1,
+                scale: isGhost ? 0.95 : 1,
+                opacity: isGhost ? 0.4 : 1,
                 x: targetX + bumpOffset.x,
                 y: size / 2,
                 z: targetZ + bumpOffset.z
             }}
             exit={{ scale: 0 }}
-            castShadow={!isGhost}
-            receiveShadow={!isGhost}
+            castShadow
+            receiveShadow
             transition={{
-                scale: isGhost ? { repeat: Infinity, duration: 2, ease: "easeInOut" } : { type: "spring", ...springConfig, delay: spawnDelay },
-                opacity: isGhost ? { repeat: Infinity, duration: 2, ease: "easeInOut" } : { duration: 0.2 },
-                x: { type: "spring", ...springConfig, delay: spawnDelay },
-                y: { type: "spring", ...springConfig, delay: spawnDelay },
-                z: { type: "spring", ...springConfig, delay: spawnDelay }
+                duration: 0.3, // スプリングではなく単純な時間指定で試す（デバッグ用）
+                type: "spring",
+                ...springConfig,
+                delay: spawnDelay
             }}
         >
             <boxGeometry args={[size, size, size]} />
             <meshStandardMaterial
                 color={color}
-                emissive={color}
-                emissiveIntensity={0.4}
-                roughness={0.3}
+                roughness={0.2}
                 metalness={0.1}
-                transparent={true}
+                transparent
                 opacity={isGhost ? 0.5 : 1}
             />
         </motion.mesh>
