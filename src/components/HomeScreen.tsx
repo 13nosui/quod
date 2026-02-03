@@ -1,18 +1,16 @@
 import { motion } from 'framer-motion';
 import { Volume2, VolumeX, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-// useBGMのインポートは削除
 
 interface HomeScreenProps {
     onStart: () => void;
     bestScore: number;
-    isPlaying: boolean;   // 追加
-    toggleBGM: () => void; // 追加
+    isPlaying: boolean;
+    toggleBGM: () => void;
 }
 
 export const HomeScreen = ({ onStart, bestScore, isPlaying, toggleBGM }: HomeScreenProps) => {
     const { theme, toggleTheme } = useTheme();
-    // useBGMフックの呼び出しを削除
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full min-h-[60vh] gap-12 z-10 relative">
@@ -27,13 +25,11 @@ export const HomeScreen = ({ onStart, bestScore, isPlaying, toggleBGM }: HomeScr
                     {isPlaying ? <Volume2 size={24} /> : <VolumeX size={24} />}
                 </button>
                 <button
-                    onClick={() => {
-                        console.log('Theme toggle clicked, current theme:', theme);
-                        toggleTheme();
-                    }}
+                    onClick={toggleTheme}
                     className="p-3 bg-[var(--gray-3)] rounded-full hover:bg-[var(--gray-4)] transition-colors text-[var(--gray-12)]"
                     aria-label="Toggle Theme"
                 >
+                    {/* ライトモードなら月（ダークへの切替）、ダークなら太陽（ライトへの切替）を表示 */}
                     {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
                 </button>
             </div>
@@ -51,7 +47,7 @@ export const HomeScreen = ({ onStart, bestScore, isPlaying, toggleBGM }: HomeScr
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 0.6, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="font-mono text-sm tracking-[0.3em] uppercase"
+                    className="font-mono text-sm tracking-[0.3em] uppercase text-[var(--gray-12)]"
                 >
                     Spatial Puzzle
                 </motion.p>
@@ -70,7 +66,7 @@ export const HomeScreen = ({ onStart, bestScore, isPlaying, toggleBGM }: HomeScr
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 0.4 }}
-                    className="flex flex-col items-center gap-1 font-mono mt-8"
+                    className="flex flex-col items-center gap-1 font-mono mt-8 text-[var(--gray-12)]"
                 >
                     <span className="text-[10px] uppercase tracking-widest">Best Score</span>
                     <span className="text-xl font-bungee">{bestScore.toString().padStart(6, '0')}</span>

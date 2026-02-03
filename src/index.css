@@ -14,23 +14,58 @@
 
 :root {
   font-family: var(--font-sans);
-  background-color: var(--color-background);
-  color: var(--gray-12);
 
+  /* --- 追加: ライトモードの色定義 --- */
+  --background: #ffffff;
+  --gray-1: #fcfcfc;
+  --gray-2: #f9f9f9;
+  --gray-3: #f0f0f0;
+  --gray-4: #e8e8e8;
+  --gray-5: #e0e0e0;
+  --gray-11: #666666;
+  --gray-12: #1a1a1a;
+
+  --color-background: var(--background);
+  --color-text: var(--gray-12);
+  /* ------------------------------- */
+
+  /* 既存のレイアウト設定（変更なし） */
+  color: var(--gray-12);
   --grid-width: min(90vw, 500px);
   --grid-gap: 4px;
   --grid-padding: 8px;
   --grid-cells: 5;
-  /* GRID_SIZE is 5 */
-  /* Calculate cell size: (grid-width - 2 * padding - (grid-cells - 1) * gap) / grid-cells */
   --cell-size: calc((var(--grid-width) - 2 * var(--grid-padding) - (var(--grid-cells) - 1) * var(--grid-gap)) / var(--grid-cells));
 }
+
+/* --- 追加: ダークモードの色定義 --- */
+/* Tailwind v4 では .dark クラスがついた時の変数をここで上書きします */
+:root:has(.dark),
+.dark {
+  --background: #111111;
+  --gray-1: #161616;
+  --gray-2: #1c1c1c;
+  --gray-3: #232323;
+  --gray-4: #282828;
+  --gray-5: #2e2e2e;
+  --gray-11: #b0b0b0;
+  --gray-12: #ededed;
+
+  --color-background: var(--background);
+  --color-text: var(--gray-12);
+}
+
+/* ------------------------------- */
 
 body {
   margin: 0;
   width: 100%;
   min-height: 100vh;
   background-color: var(--color-background);
+  color: var(--color-text);
+  /* 文字色も変数を使うように変更 */
+  transition: background-color 0.3s ease, color 0.3s ease;
+  /* 色の変化を滑らかに */
 }
 
 #root {
@@ -38,7 +73,7 @@ body {
   min-height: 100vh;
 }
 
-/* Tactile Motion Design Utilities */
+/* Tactile Motion Design Utilities（変更なし） */
 .block-shadow {
   box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.08),

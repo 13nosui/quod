@@ -11,23 +11,21 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [theme, setTheme] = useState<Theme>(() => {
-        // 1. Check localStorage
-        const savedTheme = localStorage.getItem('theme') as Theme | null;
-        if (savedTheme) return savedTheme;
-
-        // 2. Check system preference
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            return 'dark';
+        // ローカルストレージから読み込む、なければライトモード
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('theme');
+            return (saved as Theme) || 'light';
         }
-
         return 'light';
     });
 
     useEffect(() => {
+        const root = window.document.documentElement;
+        // 古いクラスを消して新しいクラスを付与
+        root.classList.remove('light', 'dark');
+        root.classList.add(theme);
+        // 保存
         localStorage.setItem('theme', theme);
-        // Apply class to document.documentElement for Tailwind CSS / CSS variables
-        document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(theme);
     }, [theme]);
 
     const toggleTheme = () => {
