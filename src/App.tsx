@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { GameContainer } from './components/GameContainer';
 import { HomeScreen } from './components/HomeScreen';
-import { ThemeProvider } from './context/ThemeContext';
+// ThemeProvider のインポートは削除（useThemeなどは必要なら残す）
 import { initializeAdMob, showBanner } from './utils/admob';
-import { useBGM } from './hooks/useBGM'; // 追加
+import { useBGM } from './hooks/useBGM';
 import './index.css';
 
 function App() {
@@ -42,33 +42,32 @@ function App() {
     initAds();
   }, []);
 
+  // ThemeProvider で囲むのをやめ、div を直接返します
   return (
-    <ThemeProvider>
-      <div style={{
-        width: '100%',
-        height: '100%',
-        paddingBottom: isNative ? '60px' : '0px',
-        boxSizing: 'border-box',
-        position: 'relative'
-      }}>
-        {screen === 'home' ? (
-          <HomeScreen
-            onStart={() => {
-              play(); // ゲーム開始時に再生
-              setScreen('game');
-            }}
-            bestScore={highScore}
-            isPlaying={isPlaying}
-            toggleBGM={toggleBGM}
-          />
-        ) : (
-          <GameContainer onBack={() => {
-            stop(); // ホームに戻るときは停止（必要なければ削除可）
-            setScreen('home');
-          }} />
-        )}
-      </div>
-    </ThemeProvider>
+    <div style={{
+      width: '100%',
+      height: '100%',
+      paddingBottom: isNative ? '60px' : '0px',
+      boxSizing: 'border-box',
+      position: 'relative'
+    }}>
+      {screen === 'home' ? (
+        <HomeScreen
+          onStart={() => {
+            play();
+            setScreen('game');
+          }}
+          bestScore={highScore}
+          isPlaying={isPlaying}
+          toggleBGM={toggleBGM}
+        />
+      ) : (
+        <GameContainer onBack={() => {
+          stop();
+          setScreen('home');
+        }} />
+      )}
+    </div>
   );
 }
 
