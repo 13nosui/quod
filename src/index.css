@@ -39,15 +39,22 @@
 body {
   margin: 0;
   width: 100%;
-  min-height: 100vh;
+  height: 100dvh;
+  /* min-height から height に変更し、高さを固定 */
+  overflow: hidden;
+  /* スクロールバーを完全に隠す */
+  overscroll-behavior: none;
+  /* iOSのスワイプバックやバウンスを無効化 */
   background-color: var(--color-background);
   transition: background-color 0.3s ease, color 0.3s ease;
-  /* なめらかに切り替え */
 }
 
 #root {
   width: 100%;
-  min-height: 100vh;
+  height: 100dvh;
+  /* min-height から height に変更 */
+  overflow: hidden;
+  /* ここも固定 */
 }
 
 /* Tactile Motion Design Utilities（変更なし） */

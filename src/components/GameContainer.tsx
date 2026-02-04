@@ -98,16 +98,16 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
 
     return (
         <div
-            className="flex flex-col items-center justify-center p-0 gap-8 select-none w-[95vw] max-w-[600px] mx-auto relative text-center touch-none h-[100dvh]"
+            // 変更点: overflow-hidden と overscroll-none を追加してスクロールを禁止
+            className="flex flex-col items-center justify-center p-0 gap-8 select-none w-[95vw] max-w-[600px] mx-auto relative text-center touch-none h-[100dvh] overflow-hidden overscroll-none"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
         >
-            {/* Header Area: レイアウトを変更 */}
+            {/* Header Area */}
             <div className="absolute top-[calc(16px+env(safe-area-inset-top))] left-4 right-4 z-10 pointer-events-none">
-                {/* コンテナを相対配置にして、内部で絶対配置と中央揃えを組み合わせる */}
                 <div className="relative flex items-start justify-center w-full">
 
-                    {/* HOMEボタン: 左端に絶対配置 (pointer-events-autoでクリック可能に) */}
+                    {/* HOMEボタン */}
                     <button
                         onClick={onBack}
                         className="absolute left-0 pointer-events-auto p-3 bg-[var(--gray-3)] rounded-full hover:bg-[var(--gray-4)] transition-colors text-[var(--gray-12)]"
@@ -115,7 +115,7 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
                         <Home size={24} />
                     </button>
 
-                    {/* NEXT表示: 中央配置 */}
+                    {/* NEXT表示 */}
                     <div className="flex flex-col items-center pointer-events-auto">
                         <div className="text-sm font-bold font-mono uppercase tracking-[0.2em] text-[var(--gray-12)] opacity-70 mb-2">
                             NEXT
@@ -151,7 +151,7 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
                         initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
                         animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 text-white"
+                        className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 text-white"
                     >
                         <motion.h2
                             initial={{ y: 20, opacity: 0 }}
