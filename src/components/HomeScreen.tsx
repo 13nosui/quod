@@ -16,7 +16,8 @@ export const HomeScreen = ({ onStart, bestScore, isSoundOn, toggleSound }: HomeS
         <div className="flex flex-col items-center justify-center w-full h-full min-h-[60vh] gap-12 z-10 relative">
 
             {/* Control Buttons */}
-            <div className="absolute top-4 right-4 flex gap-4">
+            {/* iOSのセーフエリア(env(safe-area-inset-top))を考慮して位置を下げる */}
+            <div className="absolute top-[calc(16px+env(safe-area-inset-top))] right-4 flex gap-4 z-50">
                 <button
                     onClick={toggleSound}
                     className="p-3 bg-[var(--gray-3)] rounded-full hover:bg-[var(--gray-4)] transition-colors text-[var(--gray-12)]"
