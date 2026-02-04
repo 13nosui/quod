@@ -102,8 +102,8 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
         >
-            {/* Header Area */}
-            <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10">
+            {/* Header Area: セーフエリア対応を追加 */}
+            <div className="absolute top-[calc(16px+env(safe-area-inset-top))] left-4 right-4 flex justify-between items-start z-10">
                 <button
                     onClick={onBack}
                     className="p-2 bg-white/10 backdrop-blur-md rounded-full text-text-primary opacity-70 hover:opacity-100 transition-opacity"
@@ -125,8 +125,6 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
                 </div>
             </div>
 
-            {/* Removed Score & Combo Display */}
-
             {/* 3D Scene Area */}
             <div className="w-full aspect-square max-w-[500px] relative z-0">
                 <GameScene
@@ -136,8 +134,6 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
                     bumpEvent={bumpEvent}
                 />
             </div>
-
-            {/* Removed Footer Info */}
 
             {/* Game Over Overlay */}
             <AnimatePresence>
