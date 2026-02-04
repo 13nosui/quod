@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.example.quod',
+  appId: 'io.github.13nosui.quod',
   appName: 'Quod',
   webDir: 'dist'
 };

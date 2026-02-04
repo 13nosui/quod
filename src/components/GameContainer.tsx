@@ -99,7 +99,8 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
             onTouchEnd={handleTouchEnd}
         >
             {/* Header Area */}
-            <div className="absolute top-[calc(16px+env(safe-area-inset-top))] left-4 right-4 z-10 pointer-events-none">
+            {/* 修正: Androidでの被りを防ぐため、safe-areaに加え、固定で少し余白(mt-4など)を持たせる */}
+            <div className="absolute top-0 left-4 right-4 z-10 pointer-events-none pt-[max(20px,env(safe-area-inset-top))]">
                 <div className="relative flex items-start justify-center w-full">
 
                     <button
