@@ -99,7 +99,6 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
             onTouchEnd={handleTouchEnd}
         >
             {/* Header Area */}
-            {/* 修正: Androidでの被りを防ぐため、safe-areaに加え、固定で少し余白(mt-4など)を持たせる */}
             <div className="absolute top-0 left-4 right-4 z-10 pointer-events-none pt-[max(20px,env(safe-area-inset-top))]">
                 <div className="relative flex items-start justify-center w-full">
 
@@ -129,7 +128,6 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
             </div>
 
             {/* 3D Scene Area */}
-            {/* 修正: 120%拡大などの余計なスタイルを削除し、標準サイズに戻す */}
             <div className="w-full aspect-square max-w-[500px] relative z-0">
                 <GameScene
                     smallBlocks={smallBlocks}
@@ -139,18 +137,18 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
                 />
             </div>
 
-            {/* ▼▼▼ 追加: Score Display (盤面下・中央) ▼▼▼ */}
+            {/* Score Display (Updated: No Background Box) */}
             <div className="relative z-10 pointer-events-none -mt-4">
                 <div className="flex flex-col items-center">
                     <div className="text-xs font-bold font-mono uppercase tracking-[0.2em] text-[var(--gray-12)] opacity-60 mb-1">
                         SCORE
                     </div>
-                    <div className="font-bungee text-3xl text-[var(--gray-12)] bg-[var(--gray-3)]/80 px-6 py-2 rounded-lg border border-[var(--gray-12)]/10 shadow-sm backdrop-blur-sm transition-all">
+                    {/* 修正: 背景・枠線・パディングを削除し、テキストのみシンプルに表示 */}
+                    <div className="font-bungee text-4xl text-[var(--gray-12)] tracking-wide">
                         {score.toString().padStart(6, '0')}
                     </div>
                 </div>
             </div>
-            {/* ▲▲▲ 追加ここまで ▲▲▲ */}
 
             {/* Game Over Overlay */}
             <AnimatePresence>
