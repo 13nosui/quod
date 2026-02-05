@@ -160,7 +160,7 @@ export const useGameLogic = () => {
         }
     }, [smallBlocks, score, nextSpawnColors, nextSpawnPos, comboCount, gameOver]);
 
-    // ★重要修正：獲得スコアを返すように変更 & コンボを即時反映
+    // ★重要修正：獲得スコアを返すように変更 & コンボを即時反映 & スコア計算の強化
     const processMatches = async (startGrid: GridState, dx: number = 0, dy: number = 0): Promise<{ finalGrid: GridState, totalMatches: boolean, turnScore: number }> => {
         let currentGrid = startGrid;
         let loop = true;
@@ -175,13 +175,21 @@ export const useGameLogic = () => {
             currentTurnMatches = true;
             activeCombo++;
 
-            // ★変更: マッチしたタイミングでコンボ数を即時更新
+            // マッチしたタイミングでコンボ数を即時更新（画面演出用）
             setComboCount(activeCombo);
 
             playSound('match');
+
+            // ★スコア計算の変更★
+            // 基本点: 消したブロック数 × 100
             const baseScore = matches.length * 100;
-            const bonus = activeCombo * 50;
-            const gain = baseScore + bonus;
+
+            // コンボボーナス: 基本点 × コンボ数 (乗算にすることで後半の伸びを大きくする)
+            // 例: 4個消し(400点)の場合
+            // 1コンボ目: 400 * 1 = 400点
+            // 2コンボ目: 400 * 2 = 800点
+            // 3コンボ目: 400 * 3 = 1200点
+            const gain = baseScore * activeCombo;
 
             turnScore += gain;
             setScore(s => s + gain); // 画面表示用にはstateも更新
@@ -203,8 +211,7 @@ export const useGameLogic = () => {
             }
         }
 
-        // ★変更: マッチが発生しなかった場合のみコンボをリセット
-        // (マッチした場合はwhileループ内で更新済み)
+        // マッチが発生しなかった場合のみコンボをリセット
         if (!currentTurnMatches) {
             setComboCount(0);
         }
