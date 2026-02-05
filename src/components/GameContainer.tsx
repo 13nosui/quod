@@ -20,7 +20,8 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
         nextSpawnColors,
         nextSpawnPos,
         bumpEvent,
-        score
+        score,
+        comboCount // ★追加: コンボ数を取得
     } = useGameLogic();
 
     const [touchStart, setTouchStart] = useState<{ x: number, y: number } | null>(null);
@@ -135,15 +136,39 @@ export const GameContainer = ({ onBack }: GameContainerProps) => {
                     nextSpawnColors={nextSpawnColors}
                     bumpEvent={bumpEvent}
                 />
+
+                {/* ▼▼▼ 追加: COMBO演出 (3Dシーンの上に重ねる) ▼▼▼ */}
+                <AnimatePresence mode='popLayout'>
+                    {comboCount > 1 && (
+                        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                            <motion.div
+                                key={comboCount}
+                                initial={{ scale: 0.5, opacity: 0, rotate: -10 }}
+                                animate={{ scale: 1.2, opacity: 1, rotate: 0 }}
+                                exit={{ scale: 1.5, opacity: 0 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                className="flex flex-col items-center"
+                            >
+                                <div className="text-7xl font-bungee text-[#FFCA3A] drop-shadow-[0_4px_0_rgba(0,0,0,0.2)] stroke-black tracking-tighter"
+                                    style={{ textShadow: '2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>
+                                    {comboCount}
+                                </div>
+                                <div className="text-2xl font-bungee text-white drop-shadow-md tracking-widest mt-[-10px]">
+                                    COMBO!
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+                {/* ▲▲▲ 追加ここまで ▲▲▲ */}
             </div>
 
-            {/* Score Display (Updated: No Background Box) */}
+            {/* Score Display */}
             <div className="relative z-10 pointer-events-none -mt-4">
                 <div className="flex flex-col items-center">
                     <div className="text-xs font-bold font-mono uppercase tracking-[0.2em] text-[var(--gray-12)] opacity-60 mb-1">
                         SCORE
                     </div>
-                    {/* 修正: 背景・枠線・パディングを削除し、テキストのみシンプルに表示 */}
                     <div className="font-bungee text-4xl text-[var(--gray-12)] tracking-wide">
                         {score.toString().padStart(6, '0')}
                     </div>

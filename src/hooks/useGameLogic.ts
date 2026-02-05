@@ -160,7 +160,7 @@ export const useGameLogic = () => {
         }
     }, [smallBlocks, score, nextSpawnColors, nextSpawnPos, comboCount, gameOver]);
 
-    // ★重要修正：獲得スコアを返すように変更
+    // ★重要修正：獲得スコアを返すように変更 & コンボを即時反映
     const processMatches = async (startGrid: GridState, dx: number = 0, dy: number = 0): Promise<{ finalGrid: GridState, totalMatches: boolean, turnScore: number }> => {
         let currentGrid = startGrid;
         let loop = true;
@@ -174,6 +174,9 @@ export const useGameLogic = () => {
 
             currentTurnMatches = true;
             activeCombo++;
+
+            // ★変更: マッチしたタイミングでコンボ数を即時更新
+            setComboCount(activeCombo);
 
             playSound('match');
             const baseScore = matches.length * 100;
@@ -200,8 +203,11 @@ export const useGameLogic = () => {
             }
         }
 
-        if (currentTurnMatches) setComboCount(activeCombo);
-        else setComboCount(0);
+        // ★変更: マッチが発生しなかった場合のみコンボをリセット
+        // (マッチした場合はwhileループ内で更新済み)
+        if (!currentTurnMatches) {
+            setComboCount(0);
+        }
 
         return { finalGrid: currentGrid, totalMatches: currentTurnMatches, turnScore };
     };
