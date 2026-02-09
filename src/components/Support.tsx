@@ -1,7 +1,19 @@
 import React from 'react';
-import { Mail, ArrowLeft } from 'lucide-react';
+import { Mail, ArrowLeft, Copy, Check } from 'lucide-react'; // アイコンを追加
+import { useState } from 'react';
+
+// あなたのメールアドレスに書き換えてください
+const SUPPORT_EMAIL = "13.no.sui@gmail.com";
 
 export const Support: React.FC = () => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(SUPPORT_EMAIL);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 font-sans">
             <div className="mx-auto max-w-2xl px-6 py-12">
@@ -28,27 +40,38 @@ export const Support: React.FC = () => {
                             <div className="rounded-lg bg-blue-100 p-3 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                                 <Mail className="h-6 w-6" />
                             </div>
-                            <div>
+                            <div className="flex-1">
                                 <h2 className="text-xl font-semibold">Contact Us</h2>
                                 <p className="mt-2 text-slate-600 dark:text-slate-300 leading-relaxed">
-                                    If you have found a bug, have a feature request, or need assistance with your account, please email our support team.
+                                    If you have found a bug, have a feature request, or need assistance, please email our support team.
                                 </p>
-                                <div className="mt-6">
+
+                                {/* 修正箇所: メールアドレス表示とコピー機能 */}
+                                <div className="mt-6 flex flex-col sm:flex-row gap-3">
                                     <a
-                                        href="mailto:support@example.com"
+                                        href={`mailto:${SUPPORT_EMAIL}`}
                                         className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-all"
                                     >
-                                        Email Support
+                                        <Mail className="mr-2 h-4 w-4" />
+                                        Send Email
                                     </a>
-                                    <p className="mt-3 text-sm text-slate-500">
-                                        Average response time: 24-48 hours
-                                    </p>
+
+                                    <button
+                                        onClick={handleCopy}
+                                        className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 transition-all"
+                                    >
+                                        {copied ? <Check className="mr-2 h-4 w-4 text-green-500" /> : <Copy className="mr-2 h-4 w-4" />}
+                                        {copied ? "Copied!" : SUPPORT_EMAIL}
+                                    </button>
                                 </div>
+                                <p className="mt-3 text-sm text-slate-500">
+                                    Average response time: 24-48 hours
+                                </p>
                             </div>
                         </div>
                     </section>
 
-                    {/* FAQセクション (審査対策として重要) */}
+                    {/* FAQセクション */}
                     <section>
                         <h2 className="mb-6 text-2xl font-bold">Frequently Asked Questions</h2>
                         <div className="space-y-4">
